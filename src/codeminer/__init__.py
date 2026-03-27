@@ -1,19 +1,50 @@
-"""
-This is a Python wrapper for the codeminer API.
-Search strategies may be composed using the infix operators, e.g.:
-`DESCRIPTION("diab", "icd10") >>AND>> (CHILDREN("E10", "icd10") >>OR>> CHILDREN("E11", "icd10"))`
+"""Python client for the CodeMiner clinical code API.
+
+Search strategies may be composed using infix operators::
+
+    DESCRIPTION("diab", type="icd10") >>AND>> (
+        CHILDREN("E10", type="icd10") >>OR>> CHILDREN("E11", type="icd10")
+    )
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
-from .client import DESCRIPTION, CODES, CHILDREN, OR, AND, NOT, CodeMinerError
+from ._client import (
+    ATTRIBUTES_FOR,
+    CHILDREN,
+    CODES,
+    CODES_LIKE,
+    DESCRIPTION,
+    HAS_ATTRIBUTES,
+    MAP,
+    N_CHILDREN,
+    N_PARENTS,
+    PARENTS,
+    RELATIONSHIP_TYPES_FROM,
+    RELATIONSHIP_TYPES_TO,
+    check_api_connection,
+    get_codeminer_metadata,
+)
+from ._combinators import AND, NOT, OR
+from .exceptions import CodeMinerError
 
 __all__ = [
     "DESCRIPTION",
-    "CODES", 
+    "CODES_LIKE",
+    "CODES",
     "CHILDREN",
+    "N_CHILDREN",
+    "PARENTS",
+    "N_PARENTS",
+    "ATTRIBUTES_FOR",
+    "HAS_ATTRIBUTES",
+    "RELATIONSHIP_TYPES_FROM",
+    "RELATIONSHIP_TYPES_TO",
+    "MAP",
+    "check_api_connection",
+    "get_codeminer_metadata",
     "OR",
     "AND",
     "NOT",
-    "CodeMinerError"
+    "CodeMinerError",
 ]

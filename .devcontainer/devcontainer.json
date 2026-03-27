@@ -1,0 +1,28 @@
+{
+    "name": "Poetry Python Package Devcontainer",
+    "build": {
+        "dockerfile": "../dockerfile"
+    },
+    "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-toolsai.vscode-jupyter-slideshow",
+        "ms-python.debugpy",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "ms-vscode-remote.remote-containers",
+        "quarto.quarto"
+    ],
+    "settings": {
+        "python.pythonPath": "/root/.pyenv/shims/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.formatting.provider": "black",
+        "python.testing.pytestEnabled": true,
+        "python.analysis.typeCheckingMode": "basic"
+    }
+}

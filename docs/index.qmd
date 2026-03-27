@@ -1,0 +1,56 @@
+---
+title: "codeminer"
+---
+
+Python client for the [CodeMiner](https://github.com/your-org/codeminer) clinical code API.
+
+## Installation
+
+```bash
+pip install codeminer
+```
+
+Or with Poetry:
+
+```bash
+poetry add codeminer
+```
+
+## Quick Start
+
+```{python}
+#| eval: false
+from codeminer import DESCRIPTION, CODES, CHILDREN, MAP, AND, OR, NOT
+
+# Search by description
+asthma_codes = DESCRIPTION("asthma", type="icd10")
+
+# Look up specific codes
+codes = CODES("J45", "E11", type="icd10")
+
+# Navigate hierarchies
+children = CHILDREN("73211009", type="sct")
+
+# Map between coding systems
+mapped = MAP("J45", from_type="icd10", to_type="sct")
+
+# Compose search strategies with infix operators
+diabetes = DESCRIPTION("diabet", type="icd10") >>AND>> (
+    CHILDREN("E10", type="icd10") >>OR>> CHILDREN("E11", type="icd10")
+)
+```
+
+## Configuration
+
+The API base URL is resolved in this order:
+
+1. Explicit `base_url` parameter on each function call
+2. `CODEMINER_BASE_URL` environment variable
+3. Default: `http://127.0.0.1:8000`
+
+```python
+from codeminer import check_api_connection
+
+# Verify the API is reachable
+check_api_connection()
+```
