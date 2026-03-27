@@ -10,6 +10,8 @@ the ``>>OP>>`` infix syntax to combine DataFrames::
 
 import pandas as pd
 
+from ._codelist import _as_codelist
+
 
 class Infix:
     """Wrapper enabling ``>>operator>>`` infix syntax for binary functions."""
@@ -46,7 +48,8 @@ def OR(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Combined rows, deduplicated.
     """
-    return pd.concat([df1, df2]).drop_duplicates().reset_index(drop=True)
+    result = pd.concat([df1, df2]).drop_duplicates().reset_index(drop=True)
+    return _as_codelist(result)
 
 
 @Infix
@@ -65,7 +68,8 @@ def AND(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Rows present in both DataFrames.
     """
-    return df1.merge(df2, how="inner")
+    result = df1.merge(df2, how="inner")
+    return _as_codelist(result)
 
 
 @Infix
@@ -85,8 +89,9 @@ def NOT(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         Rows from df1 not found in df2.
     """
     merged = df1.merge(df2, how="left", indicator=True)
-    return (
+    result = (
         merged[merged["_merge"] == "left_only"]
         .drop(columns=["_merge"])
         .reset_index(drop=True)
     )
+    return _as_codelist(result)

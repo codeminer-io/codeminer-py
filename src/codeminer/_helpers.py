@@ -9,8 +9,9 @@ from typing import Union
 import pandas as pd
 import requests
 
-from .exceptions import CodeMinerError
+from ._codelist import _as_codelist
 from ._conditions import _print_conditions, _raise_api_error
+from .exceptions import CodeMinerError
 
 DEFAULT_BASE_URL = "http://127.0.0.1:8000"
 
@@ -192,14 +193,16 @@ def _api_request(
     if return_raw:
         return data
 
-    # Normal success → DataFrame
+    # Normal success → DataFrame, wrapped as CodeList if applicable
     result = data.get("result", data)
     if isinstance(result, list):
-        return pd.DataFrame(result)
+        df = pd.DataFrame(result)
     elif isinstance(result, dict):
-        return pd.DataFrame(result)
+        df = pd.DataFrame(result)
     else:
-        return pd.DataFrame()
+        df = pd.DataFrame()
+
+    return _as_codelist(df)
 
 
 def _serialize_body(params: dict) -> dict:
