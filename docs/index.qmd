@@ -18,8 +18,7 @@ poetry add codeminer
 
 ## Quick Start
 
-```{python}
-#| eval: false
+```python
 from codeminer import DESCRIPTION, CODES, CHILDREN, MAP, AND, OR, NOT
 
 # Search by description
