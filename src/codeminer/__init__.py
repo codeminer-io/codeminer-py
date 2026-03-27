@@ -25,6 +25,7 @@ from ._client import (
     check_api_connection,
     get_codeminer_metadata,
 )
+from ._codelist import CodeList
 from ._combinators import AND, NOT, OR
 from .exceptions import CodeMinerError
 
@@ -46,5 +47,6 @@ __all__ = [
     "OR",
     "AND",
     "NOT",
+    "CodeList",
     "CodeMinerError",
 ]
