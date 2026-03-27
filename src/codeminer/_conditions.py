@@ -26,7 +26,7 @@ from .exceptions import CodeMinerError
 
 _console = Console(stderr=True)
 
-_BULLET_MAP = {
+_bullet_map = {
     "x": ("[bold red]✖[/bold red]", "red"),
     "!": ("[yellow]![/yellow]", "yellow"),
     "i": ("[cyan]ℹ[/cyan]", "cyan"),
@@ -34,7 +34,7 @@ _BULLET_MAP = {
     "-": (" ", None),
 }
 
-_PLAIN_BULLET_MAP = {
+_plain_bullet_map = {
     "x": "✖",
     "!": "!",
     "i": "ℹ",
@@ -75,9 +75,9 @@ def _format_condition(condition_dict, plain=False):
     for name, text in condition_dict.items():
         text = _unbox(text)
         if plain:
-            bullet_char = _PLAIN_BULLET_MAP.get(name, " ")
+            bullet_char = _plain_bullet_map.get(name, " ")
         else:
-            bullet_char, _ = _BULLET_MAP.get(name, (" ", None))
+            bullet_char, _ = _bullet_map.get(name, (" ", None))
         lines.append(f"{bullet_char} {text}")
     return lines
 
