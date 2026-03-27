@@ -20,10 +20,7 @@ Bullet-type names from R's cli::cli_bullets():
     "-" = no bullet (indented)
 """
 
-import warnings
-
 from rich.console import Console
-from rich.text import Text
 
 from .exceptions import CodeMinerError
 
@@ -37,24 +34,50 @@ _BULLET_MAP = {
     "-": (" ", None),
 }
 
+_PLAIN_BULLET_MAP = {
+    "x": "✖",
+    "!": "!",
+    "i": "ℹ",
+    "*": "•",
+    "-": " ",
+}
 
-def _format_condition(condition_dict):
-    """Format a single condition (dict of bullet_name: text) for rich output.
+
+def _unbox(value):
+    """Unwrap single-element lists to plain scalars.
+
+    R's jsonlite wraps scalars in length-1 arrays by default, so the API
+    returns e.g. ``{"x": ["message"]}`` instead of ``{"x": "message"}``.
+    """
+    if isinstance(value, list) and len(value) == 1:
+        return value[0]
+    return value
+
+
+def _format_condition(condition_dict, plain=False):
+    """Format a single condition (dict of bullet_name: text).
 
     Parameters
     ----------
     condition_dict : dict
         A dict mapping bullet names to message text,
         e.g. ``{"!": "Something happened", "i": "Try this instead"}``.
+        Values may be single-element lists (R jsonlite boxing).
+    plain : bool
+        If True, return plain text without rich markup.
 
     Returns
     -------
     list[str]
-        Lines of rich markup ready for console.print().
+        Formatted lines (rich markup or plain text).
     """
     lines = []
     for name, text in condition_dict.items():
-        bullet_char, _ = _BULLET_MAP.get(name, (" ", None))
+        text = _unbox(text)
+        if plain:
+            bullet_char = _PLAIN_BULLET_MAP.get(name, " ")
+        else:
+            bullet_char, _ = _BULLET_MAP.get(name, (" ", None))
         lines.append(f"{bullet_char} {text}")
     return lines
 
@@ -107,24 +130,25 @@ def _raise_api_error(parsed_error, status_code):
     CodeMinerError
         Always raised with the formatted message.
     """
-    error_type = parsed_error.get("error_type", "API Error")
+    error_type = _unbox(parsed_error.get("error_type", "API Error"))
     error_message = parsed_error.get("error_message", {})
 
-    # Format the bullet list for display
+    # Print rich-formatted error to stderr (the "pretty" display)
     if isinstance(error_message, dict):
-        lines = _format_condition(error_message)
-        formatted = "\n".join(lines)
-        # Also print with rich formatting to stderr
-        _console.print(f"[bold red]Error ({error_type}):[/bold red]")
-        for line in lines:
+        rich_lines = _format_condition(error_message)
+        _console.print(f"\n[bold red]Error[/bold red] ({error_type}):")
+        for line in rich_lines:
             _console.print(f"  {line}")
+        # Short plain-text message for the exception repr
+        first_value = _unbox(next(iter(error_message.values())))
+        short_msg = str(first_value)
     elif isinstance(error_message, str):
-        formatted = error_message
-        _console.print(f"[bold red]Error ({error_type}):[/bold red] {error_message}")
+        _console.print(f"\n[bold red]Error[/bold red] ({error_type}): {error_message}")
+        short_msg = error_message
     else:
-        formatted = str(error_message)
-        _console.print(f"[bold red]Error ({error_type}):[/bold red] {formatted}")
+        short_msg = str(error_message)
+        _console.print(f"\n[bold red]Error[/bold red] ({error_type}): {short_msg}")
 
     raise CodeMinerError(
-        formatted, error_type=error_type, error_message=error_message
+        short_msg, error_type=error_type, error_message=error_message
     )

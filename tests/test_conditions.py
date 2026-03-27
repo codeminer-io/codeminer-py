@@ -33,6 +33,12 @@ class TestFormatCondition:
         lines = _format_condition({"?": "Unknown"})
         assert "Unknown" in lines[0]
 
+    def test_unboxes_single_element_list_values(self):
+        """R's jsonlite wraps scalars in length-1 arrays."""
+        lines = _format_condition({"x": ["Error text"], "i": ["Hint"]})
+        assert "Error text" in lines[0]
+        assert "Hint" in lines[1]
+
 
 class TestRaiseApiError:
     def test_raises_codeminer_error(self):
@@ -60,3 +66,23 @@ class TestRaiseApiError:
         }
         with pytest.raises(CodeMinerError):
             _raise_api_error(parsed, 500)
+
+    def test_unboxes_single_element_lists(self):
+        """R's jsonlite wraps scalars in length-1 arrays by default."""
+        parsed = {
+            "error_type": ["codeminer_error"],
+            "error_message": {
+                "x": ["Code type not found"],
+                "i": ["Available types: ICD-10"],
+            },
+        }
+        with pytest.raises(CodeMinerError) as exc_info:
+            _raise_api_error(parsed, 422)
+        assert exc_info.value.error_type == "codeminer_error"
+        # Exception message is the short first-line message
+        assert "Code type not found" in str(exc_info.value)
+        # Structured error_message preserved for programmatic access
+        assert exc_info.value.error_message == {
+            "x": ["Code type not found"],
+            "i": ["Available types: ICD-10"],
+        }
