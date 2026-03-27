@@ -1,0 +1,50 @@
+project:
+  type: website
+
+website:
+  title: "codeminer"
+  navbar:
+    left:
+      - text: "Reference"
+        href: reference/index.qmd
+
+quartodoc:
+  style: pkgdown
+  dir: reference
+  package: codeminer
+  sections:
+    - title: "Code Search"
+      desc: "Functions for searching and looking up clinical codes"
+      contents:
+        - DESCRIPTION
+        - CODES_LIKE
+        - CODES
+    - title: "Hierarchy Navigation"
+      desc: "Navigate parent/child relationships in code hierarchies"
+      contents:
+        - CHILDREN
+        - N_CHILDREN
+        - PARENTS
+        - N_PARENTS
+    - title: "Attributes"
+      desc: "Query code attributes and relationships"
+      contents:
+        - ATTRIBUTES_FOR
+        - HAS_ATTRIBUTES
+        - RELATIONSHIP_TYPES_FROM
+        - RELATIONSHIP_TYPES_TO
+    - title: "Mapping"
+      desc: "Map codes between coding systems"
+      contents:
+        - MAP
+    - title: "Utilities"
+      desc: "Connection and metadata utilities"
+      contents:
+        - check_api_connection
+        - get_codeminer_metadata
+    - title: "Combinators"
+      desc: "Infix operators for combining code lists"
+      contents:
+        - OR
+        - AND
+        - NOT

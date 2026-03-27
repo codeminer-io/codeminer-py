@@ -63,6 +63,9 @@ Thumbs.db
 
 # Documentation
 docs/_build/
+_site/
+/.quarto/
+docs/reference/
 
 # PyPI
 .pypirc

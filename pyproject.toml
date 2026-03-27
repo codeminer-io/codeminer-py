@@ -1,74 +1,42 @@
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "codeminer"
-version = "0.1.0"
-description = "Python client library for the CodeMiner clinical code mapping API"
+version = "0.2.0"
+description = "Python client for the CodeMiner clinical code API"
+authors = ["Alasdair Warwick <alasdair.warwick.19@ucl.ac.uk>"]
+license = "MIT"
 readme = "README.md"
-requires-python = ">=3.8"
-license = {text = "MIT"}
-authors = [
-    {name = "Alasdair Warwick", email = "alasdair.warwick.19@ucl.ac.uk"}
-]
-keywords = ["clinical-codes", "healthcare", "medical-coding", "icd10", "api-client"]
+packages = [{include = "codeminer", from = "src"}]
+keywords = ["clinical-codes", "healthcare", "medical-coding", "icd10", "snomed", "api-client"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Healthcare Industry",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
 ]
-dependencies = [
-    "requests>=2.25.0",
-    "pandas>=1.3.0",
-    "pydantic>=1.8.0",
-]
 
-[project.optional-dependencies]
-async = ["aiohttp>=3.8.0", "asyncio"]
-dev = [
-    "pytest>=6.0",
-    "pytest-cov",
-    "pytest-asyncio",
-    "black",
-    "isort",
-    "flake8",
-    "mypy",
-    "build",
-    "twine",
-]
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = ">=2.25.0"
+pandas = ">=1.3.0"
+rich = ">=12.0.0"
 
-[project.urls]
-Homepage = "https://github.com/your-org/codeminer-py"
-Repository = "https://github.com/your-org/codeminer-py"
-Documentation = "https://codeminer-py.readthedocs.io"
-"Bug Tracker" = "https://github.com/your-org/codeminer-py/issues"
+[tool.poetry.group.dev.dependencies]
+pytest = ">=7.0"
+pytest-cov = "*"
+black = "*"
+quartodoc = "*"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-dir]
-"" = "src"
-
-[tool.black]
-line-length = 88
-target-version = ['py38']
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
+markers = [
+    "integration: tests requiring a running CodeMiner API",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
