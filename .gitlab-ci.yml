@@ -1,0 +1,25 @@
+image: python:3.11-slim
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  before_script:
+    # Install Quarto
+    - apt-get update -qq && apt-get install -y -qq wget > /dev/null
+    - wget -qO quarto.deb https://github.com/quarto-dev/quarto-cli/releases/download/v1.7.6/quarto-1.7.6-linux-amd64.deb
+    - dpkg -i quarto.deb && rm quarto.deb
+    # Install Python package + dev dependencies (including quartodoc)
+    - pip install -q poetry
+    - poetry config virtualenvs.create false
+    - poetry install --with dev -q
+  script:
+    - cd docs
+    - quartodoc build
+    - quarto render .
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
