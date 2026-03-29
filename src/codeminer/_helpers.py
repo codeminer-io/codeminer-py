@@ -9,6 +9,7 @@ from typing import Union
 import pandas as pd
 import requests
 
+from ._config import config
 from .exceptions import CodeMinerError
 from ._conditions import _print_conditions, _raise_api_error
 
@@ -18,20 +19,24 @@ DEFAULT_BASE_URL = "http://127.0.0.1:8000"
 def _get_base_url(base_url: str | None) -> str:
     """Resolve the API base URL.
 
-    Resolution order: explicit argument > ``CODEMINER_BASE_URL`` env var >
-    ``"http://127.0.0.1:8000"``.
+    Resolution order: explicit argument > ``config.base_url`` >
+    ``CODEMINER_BASE_URL`` env var > ``"http://127.0.0.1:8000"``.
 
     Parameters
     ----------
     base_url : str | None
-        Explicit URL, or ``None`` to use env/default.
+        Explicit URL, or ``None`` to use config/env/default.
 
     Returns
     -------
     str
         The resolved base URL with any trailing slash stripped.
     """
-    url = base_url or os.environ.get("CODEMINER_BASE_URL", DEFAULT_BASE_URL)
+    url = (
+        base_url
+        or config.base_url
+        or os.environ.get("CODEMINER_BASE_URL", DEFAULT_BASE_URL)
+    )
     return url.rstrip("/")
 
 

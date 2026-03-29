@@ -26,6 +26,7 @@ from ._client import (
     get_codeminer_metadata,
 )
 from ._combinators import AND, NOT, OR
+from ._config import config, with_type
 from .exceptions import CodeMinerError
 
 __all__ = [
@@ -46,5 +47,7 @@ __all__ = [
     "OR",
     "AND",
     "NOT",
+    "config",
+    "with_type",
     "CodeMinerError",
 ]
