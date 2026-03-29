@@ -2,6 +2,9 @@
 
 Each function corresponds to a POST endpoint on the CodeMiner API server,
 with parameter names matching the R package as closely as possible.
+
+Parameters with config-aware defaults use the ``_unset`` sentinel. Resolution
+order: explicit argument > ``config`` value > hardcoded default.
 """
 
 from __future__ import annotations
@@ -12,6 +15,7 @@ from typing import Union
 import pandas as pd
 import requests
 
+from ._config import _unset, _resolve
 from ._helpers import _api_request, _collect_codes, _get_base_url
 from .exceptions import CodeMinerError
 
@@ -23,8 +27,8 @@ from .exceptions import CodeMinerError
 
 def DESCRIPTION(
     pattern: str,
-    type: str | None = None,
-    lookup_version: str = "latest",
+    type: str | None = _unset,
+    lookup_version: str = _unset,
     ignore_case: bool = True,
     preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
@@ -38,7 +42,8 @@ def DESCRIPTION(
     pattern : str
         Regex pattern to match against code descriptions.
     type : str | None
-        Code type to search (e.g. ``"icd10"``, ``"sct"``).
+        Code type to search (e.g. ``"icd10"``, ``"sct"``). Falls back to
+        ``config.type`` if not provided.
     lookup_version : str
         Version of the lookup table to use.
     ignore_case : bool
@@ -63,6 +68,9 @@ def DESCRIPTION(
     >>> DESCRIPTION("asthma", type="icd10")
     >>> DESCRIPTION("diabet", type="sct", ignore_case=True)
     """
+    type = _resolve(type, "type")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+
     body_params = {
         "pattern": pattern,
         "type": type,
@@ -78,8 +86,8 @@ def DESCRIPTION(
 
 def CODES_LIKE(
     pattern: str,
-    type: str | None = None,
-    lookup_version: str = "latest",
+    type: str | None = _unset,
+    lookup_version: str = _unset,
     preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
@@ -113,6 +121,9 @@ def CODES_LIKE(
     --------
     >>> CODES_LIKE("^J45", type="icd10")
     """
+    type = _resolve(type, "type")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+
     body_params = {
         "pattern": pattern,
         "type": type,
@@ -132,8 +143,8 @@ def CODES_LIKE(
 
 def CODES(
     *codes: str | pd.DataFrame,
-    type: str | None = None,
-    lookup_version: str = "latest",
+    type: str | None = _unset,
+    lookup_version: str = _unset,
     preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
@@ -169,6 +180,9 @@ def CODES(
     >>> CODES("J45", "E11", type="icd10")
     >>> CODES(existing_codelist)
     """
+    type = _resolve(type, "type")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
         "codes": collected_codes,
@@ -184,9 +198,9 @@ def CODES(
 
 def CHILDREN(
     *codes: str | pd.DataFrame,
-    type: str | None = None,
-    lookup_version: str = "latest",
-    relationship_version: str = "latest",
+    type: str | None = _unset,
+    lookup_version: str = _unset,
+    relationship_version: str = _unset,
     preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
@@ -222,6 +236,10 @@ def CHILDREN(
     --------
     >>> CHILDREN("73211009", type="sct")
     """
+    type = _resolve(type, "type")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
         "codes": collected_codes,
@@ -239,9 +257,9 @@ def CHILDREN(
 def N_CHILDREN(
     *codes: str | pd.DataFrame,
     depth: int | float = 1,
-    type: str | None = None,
-    lookup_version: str = "latest",
-    relationship_version: str = "latest",
+    type: str | None = _unset,
+    lookup_version: str = _unset,
+    relationship_version: str = _unset,
     preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
@@ -280,6 +298,10 @@ def N_CHILDREN(
     >>> N_CHILDREN("73211009", depth=2, type="sct")
     >>> N_CHILDREN("73211009", depth=math.inf, type="sct")
     """
+    type = _resolve(type, "type")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
         "codes": collected_codes,
@@ -297,9 +319,9 @@ def N_CHILDREN(
 
 def PARENTS(
     *codes: str | pd.DataFrame,
-    type: str | None = None,
-    lookup_version: str = "latest",
-    relationship_version: str = "latest",
+    type: str | None = _unset,
+    lookup_version: str = _unset,
+    relationship_version: str = _unset,
     preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
@@ -335,6 +357,10 @@ def PARENTS(
     --------
     >>> PARENTS("73211009", type="sct")
     """
+    type = _resolve(type, "type")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
         "codes": collected_codes,
@@ -352,9 +378,9 @@ def PARENTS(
 def N_PARENTS(
     *codes: str | pd.DataFrame,
     depth: int | float = 1,
-    type: str | None = None,
-    lookup_version: str = "latest",
-    relationship_version: str = "latest",
+    type: str | None = _unset,
+    lookup_version: str = _unset,
+    relationship_version: str = _unset,
     preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
@@ -392,6 +418,10 @@ def N_PARENTS(
     --------
     >>> N_PARENTS("73211009", depth=2, type="sct")
     """
+    type = _resolve(type, "type")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
         "codes": collected_codes,
@@ -409,9 +439,9 @@ def N_PARENTS(
 
 def ATTRIBUTES_FOR(
     *codes: str | pd.DataFrame,
-    type: str | None = None,
-    lookup_version: str = "latest",
-    relationship_version: str = "latest",
+    type: str | None = _unset,
+    lookup_version: str = _unset,
+    relationship_version: str = _unset,
     relationship_types: list[str] | pd.DataFrame | None = None,
     preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
@@ -451,6 +481,10 @@ def ATTRIBUTES_FOR(
     --------
     >>> ATTRIBUTES_FOR("73211009", type="sct")
     """
+    type = _resolve(type, "type")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+
     collected_codes, df_type = _collect_codes(*codes, type=type)
 
     # Normalize relationship_types: DataFrame → list of strings
@@ -476,9 +510,9 @@ def ATTRIBUTES_FOR(
 
 def HAS_ATTRIBUTES(
     *codes: str | pd.DataFrame,
-    type: str | None = None,
-    lookup_version: str = "latest",
-    relationship_version: str = "latest",
+    type: str | None = _unset,
+    lookup_version: str = _unset,
+    relationship_version: str = _unset,
     relationship_types: list[str] | pd.DataFrame | None = None,
     preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
@@ -518,6 +552,10 @@ def HAS_ATTRIBUTES(
     --------
     >>> HAS_ATTRIBUTES("73211009", type="sct")
     """
+    type = _resolve(type, "type")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+
     collected_codes, df_type = _collect_codes(*codes, type=type)
 
     if isinstance(relationship_types, pd.DataFrame):
@@ -542,8 +580,8 @@ def HAS_ATTRIBUTES(
 
 def RELATIONSHIP_TYPES_FROM(
     *codes: str | pd.DataFrame,
-    type: str | None = None,
-    relationship_version: str = "latest",
+    type: str | None = _unset,
+    relationship_version: str = _unset,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
@@ -574,6 +612,9 @@ def RELATIONSHIP_TYPES_FROM(
     --------
     >>> RELATIONSHIP_TYPES_FROM("73211009", type="sct")
     """
+    type = _resolve(type, "type")
+    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
         "codes": collected_codes,
@@ -591,8 +632,8 @@ def RELATIONSHIP_TYPES_FROM(
 
 def RELATIONSHIP_TYPES_TO(
     *codes: str | pd.DataFrame,
-    type: str | None = None,
-    relationship_version: str = "latest",
+    type: str | None = _unset,
+    relationship_version: str = _unset,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
@@ -623,6 +664,9 @@ def RELATIONSHIP_TYPES_TO(
     --------
     >>> RELATIONSHIP_TYPES_TO("73211009", type="sct")
     """
+    type = _resolve(type, "type")
+    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
         "codes": collected_codes,
@@ -640,10 +684,10 @@ def RELATIONSHIP_TYPES_TO(
 
 def MAP(
     *codes: str | pd.DataFrame,
-    from_type: str | None = None,
-    to_type: str | None = None,
-    map_version: str = "latest",
-    lookup_version: str = "latest",
+    from_type: str | None = _unset,
+    to_type: str | None = _unset,
+    map_version: str = _unset,
+    lookup_version: str = _unset,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
@@ -658,7 +702,8 @@ def MAP(
         Source code type (e.g. ``"icd10"``). Named ``from_type`` because
         ``from`` is a Python reserved word; maps to the ``from`` API parameter.
     to_type : str | None
-        Target code type (e.g. ``"sct"``). Maps to the ``to`` API parameter.
+        Target code type (e.g. ``"sct"``). Falls back to ``config.type``
+        if not provided (mirroring R's ``codeminer.map_to`` option).
     map_version : str
         Version of the mapping table to use.
     lookup_version : str
@@ -679,6 +724,11 @@ def MAP(
     --------
     >>> MAP("J45", from_type="icd10", to_type="sct")
     """
+    from_type = _resolve(from_type, "type")
+    to_type = _resolve(to_type, "type")
+    map_version = _resolve(map_version, "map_version", "latest")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+
     collected_codes, df_type = _collect_codes(*codes, type=from_type)
     body_params = {
         "codes": collected_codes,
@@ -800,7 +850,6 @@ def get_codeminer_metadata(
         if isinstance(result, list):
             return pd.DataFrame(result)
         elif isinstance(result, dict):
-            # Could be column-oriented or a nested dict
             return pd.DataFrame(result)
         return pd.DataFrame()
 
