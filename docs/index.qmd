@@ -16,17 +16,29 @@ Or with Poetry:
 poetry add codeminer
 ```
 
-## Quick Start
+## Connecting to the API
+
+Point the client at your CodeMiner API server:
 
 ```python
 import codeminer
+
+# Set the API URL (defaults to http://127.0.0.1:8000)
+codeminer.config.base_url = "http://your-server:8000"
+
+# Verify the connection
+codeminer.check_api_connection()
+```
+
+Alternatively, set the `CODEMINER_BASE_URL` environment variable.
+
+## Quick Start
+
+```python
 from codeminer import (
     DESCRIPTION, CODES, CODES_LIKE, CHILDREN, N_CHILDREN,
     PARENTS, MAP, check_api_connection, AND, OR, NOT, with_type
 )
-
-# Check the API is running
-check_api_connection()
 ```
 
 ### Searching for codes
