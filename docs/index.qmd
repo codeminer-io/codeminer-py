@@ -2,7 +2,7 @@
 title: "codeminer"
 ---
 
-Python client for the [CodeMiner](https://github.com/your-org/codeminer) clinical code API.
+Python client for the [CodeMiner](https://github.com/codeminer-io/codeminer) clinical code API.
 
 ## Installation
 
@@ -16,24 +16,69 @@ Or with Poetry:
 poetry add codeminer
 ```
 
+## Connecting to the API
+
+Point the client at your CodeMiner API server:
+
+```python
+import codeminer
+
+# Set the API URL (defaults to http://127.0.0.1:8000)
+codeminer.config.base_url = "http://your-server:8000"
+
+# Verify the connection
+codeminer.check_api_connection()
+```
+
+Alternatively, set the `CODEMINER_BASE_URL` environment variable.
+
 ## Quick Start
 
 ```python
-from codeminer import DESCRIPTION, CODES, CHILDREN, MAP, AND, OR, NOT
+from codeminer import (
+    DESCRIPTION, CODES, CODES_LIKE, CHILDREN, N_CHILDREN,
+    PARENTS, MAP, check_api_connection, AND, OR, NOT, with_type
+)
+```
 
+### Searching for codes
+
+```python
 # Search by description
-asthma_codes = DESCRIPTION("asthma", type="icd10")
+asthma = DESCRIPTION("asthma", type="icd10")
+
+# Search by code pattern
+j45_codes = CODES_LIKE("^J45", type="icd10")
 
 # Look up specific codes
 codes = CODES("J45", "E11", type="icd10")
+```
 
-# Navigate hierarchies
+### Navigating hierarchies
+
+```python
+# Immediate children
 children = CHILDREN("73211009", type="sct")
 
-# Map between coding systems
-mapped = MAP("J45", from_type="icd10", to_type="sct")
+# All descendants (unlimited depth)
+import math
+all_descendants = N_CHILDREN("73211009", depth=math.inf, type="sct")
 
-# Compose search strategies with infix operators
+# Parents
+parents = PARENTS("73211009", type="sct")
+```
+
+### Mapping between code systems
+
+```python
+mapped = MAP("J45", from_type="icd10", to_type="sct")
+```
+
+### Composing queries with infix operators
+
+Use `>>AND>>`, `>>OR>>`, and `>>NOT>>` to combine results:
+
+```python
 diabetes = DESCRIPTION("diabet", type="icd10") >>AND>> (
     CHILDREN("E10", type="icd10") >>OR>> CHILDREN("E11", type="icd10")
 )
@@ -41,15 +86,114 @@ diabetes = DESCRIPTION("diabet", type="icd10") >>AND>> (
 
 ## Configuration
 
+### Setting persistent defaults
+
+Use `codeminer.config` to set defaults that apply to all subsequent calls,
+mirroring R's `options()` system:
+
+```python
+import codeminer
+
+# Set default code type — no need to pass type= on every call
+codeminer.config.type = "sct"
+
+DESCRIPTION("diabetes")          # uses sct
+CODES("73211009")                # uses sct
+CHILDREN("73211009")             # uses sct
+
+# config.type also sets the default to_type for MAP
+MAP("J45", from_type="icd10")   # maps to sct
+```
+
+Available config options:
+
+| Option | Default | Description |
+|---|---|---|
+| `config.type` | `None` | Default code type (also default `to_type` for MAP) |
+| `config.lookup_version` | `"latest"` | Lookup table version |
+| `config.relationship_version` | `"latest"` | Relationship table version |
+| `config.map_version` | `"latest"` | Mapping table version |
+| `config.base_url` | `None` | API URL (falls back to env var, then `http://127.0.0.1:8000`) |
+
+Explicit function arguments always take priority over config values.
+
+### Temporary overrides with `with_type()`
+
+Use `with_type()` when a script is predominantly one code type but needs
+to query another temporarily — mirroring R's `with_type()` / `icd10()` /
+`sct()` helpers:
+
+```python
+import codeminer
+from codeminer import CODES, MAP, with_type
+
+# Script works with SNOMED CT
+codeminer.config.type = "sct"
+
+# Temporarily switch to BNF for a few queries
+with with_type("bnf"):
+    bnf_codes = CODES("0204")
+
+# Back to sct context
+# from_type inferred from the DataFrame, to_type from config
+mapped = MAP(bnf_codes)
+```
+
+Nesting is supported:
+
+```python
+codeminer.config.type = "sct"
+
+with with_type("icd10"):
+    icd_codes = DESCRIPTION("diabetes")
+    with with_type("bnf"):
+        bnf_codes = CODES("0601")
+    # back to icd10
+    more_icd = CODES("E10")
+
+# back to sct
+sct_codes = DESCRIPTION("diabetes")
+```
+
+### Passing previous results
+
+Functions accept DataFrames from previous queries. The code type is
+inferred from the DataFrame's `code_type` column:
+
+```python
+codeminer.config.type = "sct"
+
+# Build up a codelist
+asthma = DESCRIPTION("asthma")
+asthma_children = CHILDREN(asthma)
+
+# Map to ICD-10 (from_type inferred, to_type set explicitly)
+mapped = MAP(asthma, to_type="icd10")
+```
+
+### Resetting config
+
+```python
+codeminer.config.reset()  # restores all defaults
+```
+
+### Base URL resolution
+
 The API base URL is resolved in this order:
 
 1. Explicit `base_url` parameter on each function call
-2. `CODEMINER_BASE_URL` environment variable
-3. Default: `http://127.0.0.1:8000`
+2. `codeminer.config.base_url`
+3. `CODEMINER_BASE_URL` environment variable
+4. Default: `http://127.0.0.1:8000`
 
 ```python
-from codeminer import check_api_connection
+# Option 1: config
+codeminer.config.base_url = "http://myserver:9000"
 
-# Verify the API is reachable
-check_api_connection()
+# Option 2: environment variable
+import os
+os.environ["CODEMINER_BASE_URL"] = "http://myserver:9000"
+
+# Option 3: per-call
+DESCRIPTION("asthma", type="icd10", base_url="http://myserver:9000")
 ```
