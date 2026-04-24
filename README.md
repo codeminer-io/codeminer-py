@@ -5,7 +5,7 @@ Python client for the CodeMiner clinical code API.
 ## Installation
 
 ```bash
-poetry add codeminer
+uv add codeminer
 ```
 
 ## Quick Start
@@ -50,8 +50,8 @@ check_api_connection()
 ```bash
 git clone <repo-url>
 cd codeminer-py
-poetry install
-poetry run pytest
+uv sync
+uv run pytest
 ```
 
 ## License
