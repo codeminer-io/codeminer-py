@@ -9,6 +9,18 @@ Search strategies may be composed using infix operators::
 
 __version__ = "0.2.0"
 
+from ._auth import (
+    AuthStrategy,
+    auth_bearer_token,
+    auth_clear,
+    auth_current,
+    auth_custom,
+    auth_describe,
+    auth_dev_user,
+    auth_none,
+    auth_use,
+    default_auth,
+)
 from ._client import (
     ATTRIBUTES_FOR,
     CHILDREN,
@@ -50,4 +62,14 @@ __all__ = [
     "config",
     "with_type",
     "CodeMinerError",
+    "AuthStrategy",
+    "auth_none",
+    "auth_dev_user",
+    "auth_bearer_token",
+    "auth_custom",
+    "auth_use",
+    "auth_clear",
+    "auth_current",
+    "auth_describe",
+    "default_auth",
 ]

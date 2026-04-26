@@ -9,6 +9,7 @@ from typing import Union
 import pandas as pd
 import requests
 
+from ._auth import AuthStrategy, auth_current
 from ._config import config
 from .exceptions import CodeMinerError
 from ._conditions import _print_conditions, _raise_api_error
@@ -121,6 +122,7 @@ def _api_request(
     query_params: dict | None = None,
     return_raw: bool = False,
     base_url: str | None = None,
+    auth: AuthStrategy | None = None,
 ) -> pd.DataFrame | dict:
     """Make a request to the CodeMiner API.
 
@@ -138,6 +140,8 @@ def _api_request(
         If ``True``, return the parsed JSON dict instead of a DataFrame.
     base_url : str | None
         Override the base URL.
+    auth : AuthStrategy | None
+        Auth strategy to apply. If ``None``, uses :func:`auth_current`.
 
     Returns
     -------
@@ -152,13 +156,21 @@ def _api_request(
     url = _get_base_url(base_url)
     full_url = f"{url}{endpoint}"
 
+    if auth is None:
+        auth = auth_current()
+
     try:
         if body_params is not None:
-            # Serialize math.inf as "Inf" string for JSON
-            body = _serialize_body(body_params)
-            response = requests.post(full_url, json=body)
+            kwargs: dict = {
+                "json": _serialize_body(body_params),
+                "headers": {},
+            }
+            kwargs = auth(kwargs)
+            response = requests.post(full_url, **kwargs)
         else:
-            response = requests.get(full_url, params=query_params or {})
+            kwargs = {"params": query_params or {}, "headers": {}}
+            kwargs = auth(kwargs)
+            response = requests.get(full_url, **kwargs)
     except requests.RequestException as e:
         raise CodeMinerError(
             f"Failed to connect to CodeMiner API at {full_url}: {e}"
