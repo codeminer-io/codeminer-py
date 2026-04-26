@@ -93,6 +93,8 @@ def _print_conditions(parsed_response):
     parsed_response : dict
         The full parsed JSON response from the API.
     """
+    if not isinstance(parsed_response, dict):
+        return
     warning_items = parsed_response.get("warnings", [])
     message_items = parsed_response.get("messages", [])
 
@@ -130,6 +132,25 @@ def _raise_api_error(parsed_error, status_code):
     CodeMinerError
         Always raised with the formatted message.
     """
+    # Auth filter and other simple plumber errors return ``{"error": ["msg"]}``
+    # or ``{"error": "msg"}`` rather than the structured
+    # ``{"error_type": ..., "error_message": ...}`` shape — surface those
+    # plainly instead of crashing on ``.get``.
+    if not isinstance(parsed_error, dict):
+        if isinstance(parsed_error, list):
+            short_msg = "; ".join(str(_unbox(item)) for item in parsed_error)
+        else:
+            short_msg = str(_unbox(parsed_error))
+        if not short_msg:
+            short_msg = f"HTTP {status_code}"
+        error_type = f"http_{status_code}"
+        _console.print(
+            f"\n[bold red]Error[/bold red] (HTTP {status_code}): {short_msg}"
+        )
+        raise CodeMinerError(
+            short_msg, error_type=error_type, error_message=parsed_error
+        )
+
     error_type = _unbox(parsed_error.get("error_type", "API Error"))
     error_message = parsed_error.get("error_message", {})
 

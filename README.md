@@ -45,6 +45,26 @@ from codeminer import check_api_connection
 check_api_connection()
 ```
 
+## Authentication
+
+When the server is running with auth enabled, set a strategy once per session:
+
+```python
+from codeminer import auth_use, auth_dev_user, auth_bearer_token
+
+# Dev-user mode (server set with CODEMINER_DEV_AUTH=1)
+auth_use(auth_dev_user("username"))
+
+# JWT / bearer token mode (server set with PLUMBER_SECRET)
+auth_use(auth_bearer_token("eyJhbGciOi..."))
+```
+
+`auth_dev_user()` reads the `CODEMINER_DEV_USER` environment variable when no
+`user_id` is passed; if that variable is set, it is also picked up
+automatically by `default_auth()` so you don't have to call `auth_use()` at
+all. Use `auth_clear()` to drop the session-wide setting and `auth_describe()`
+to inspect the active strategy.
+
 ## Development
 
 ```bash
