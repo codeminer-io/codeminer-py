@@ -10,6 +10,7 @@ import pandas as pd
 import requests
 
 from ._auth import AuthStrategy, auth_current
+from ._codelist import CodeList
 from ._config import config
 from .exceptions import CodeMinerError
 from ._conditions import _print_conditions, _raise_api_error
@@ -209,14 +210,15 @@ def _api_request(
     if return_raw:
         return data
 
-    # Normal success → DataFrame
+    # Normal success → DataFrame, wrapped as CodeList when columns match
     result = data.get("result", data)
     if isinstance(result, list):
-        return pd.DataFrame(result)
+        df = pd.DataFrame(result)
     elif isinstance(result, dict):
-        return pd.DataFrame(result)
+        df = pd.DataFrame(result)
     else:
-        return pd.DataFrame()
+        df = pd.DataFrame()
+    return CodeList._wrap(df)
 
 
 def _serialize_body(params: dict) -> dict:

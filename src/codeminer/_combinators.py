@@ -10,6 +10,8 @@ the ``>>OP>>`` infix syntax to combine DataFrames::
 
 import pandas as pd
 
+from ._codelist import CodeList
+
 
 class Infix:
     """Wrapper enabling ``>>operator>>`` infix syntax for binary functions."""
@@ -31,9 +33,12 @@ class Infix:
 
 
 @Infix
-def OR(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+def OR(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame | CodeList:
     """Union of two DataFrames (set OR).
 
+    Returns a :class:`CodeList` when the result has the required columns,
+    otherwise a plain :class:`pd.DataFrame`.
+
     Parameters
     ----------
     df1 : pd.DataFrame
@@ -43,15 +48,20 @@ def OR(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
 
     Returns
     -------
-    pd.DataFrame
+    pd.DataFrame | CodeList
         Combined rows, deduplicated.
     """
-    return pd.concat([df1, df2]).drop_duplicates().reset_index(drop=True)
+    return CodeList._wrap(
+        pd.concat([df1, df2]).drop_duplicates().reset_index(drop=True)
+    )
 
 
 @Infix
-def AND(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+def AND(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame | CodeList:
     """Intersection of two DataFrames (set AND).
+
+    Returns a :class:`CodeList` when the result has the required columns,
+    otherwise a plain :class:`pd.DataFrame`.
 
     Parameters
     ----------
@@ -62,15 +72,18 @@ def AND(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
 
     Returns
     -------
-    pd.DataFrame
+    pd.DataFrame | CodeList
         Rows present in both DataFrames.
     """
-    return df1.merge(df2, how="inner")
+    return CodeList._wrap(df1.merge(df2, how="inner"))
 
 
 @Infix
-def NOT(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+def NOT(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame | CodeList:
     """Set difference: rows in df1 but not in df2 (set NOT).
+
+    Returns a :class:`CodeList` when the result has the required columns,
+    otherwise a plain :class:`pd.DataFrame`.
 
     Parameters
     ----------
@@ -81,11 +94,11 @@ def NOT(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
 
     Returns
     -------
-    pd.DataFrame
+    pd.DataFrame | CodeList
         Rows from df1 not found in df2.
     """
     merged = df1.merge(df2, how="left", indicator=True)
-    return (
+    return CodeList._wrap(
         merged[merged["_merge"] == "left_only"]
         .drop(columns=["_merge"])
         .reset_index(drop=True)

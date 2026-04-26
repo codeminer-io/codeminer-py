@@ -31,6 +31,27 @@ diabetes = DESCRIPTION("diabet", type="ICD-10") >>AND>> (
 )
 ```
 
+## Results — `CodeList`
+
+API functions return a `CodeList`, a thin `pd.DataFrame` subclass mirroring
+R's `codeminer_codelist`. It carries `code`, `description`, and `code_type`
+columns and renders with a header showing the row count and code type.
+Combinators (`AND`/`OR`/`NOT`) preserve the type when both inputs have the
+required columns.
+
+```python
+from codeminer import DESCRIPTION, CHILDREN
+
+asthma = DESCRIPTION("asthma", type="ICD-10")
+isinstance(asthma, pd.DataFrame)   # True
+CHILDREN(asthma)                   # `type` is inferred from asthma["code_type"]
+asthma.validate()                  # strict checks: single code_type, no NAs, ...
+```
+
+Operations that drop a required column (e.g. `cl.drop(columns=["code_type"])`)
+return a degraded `CodeList` that no longer represents a complete code list —
+call `.validate()` if you need a guarantee.
+
 ## Configuration
 
 The API base URL is resolved in this order:
