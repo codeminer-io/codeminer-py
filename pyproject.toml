@@ -1,11 +1,13 @@
-[tool.poetry]
+[project]
 name = "codeminer"
 version = "0.2.0"
 description = "Python client for the CodeMiner clinical code API"
-authors = ["Alasdair Warwick <alasdair.warwick.19@ucl.ac.uk>"]
-license = "MIT"
+authors = [
+    { name = "Alasdair Warwick", email = "alasdair.warwick.19@ucl.ac.uk" },
+]
+license = { text = "MIT" }
 readme = "README.md"
-packages = [{include = "codeminer", from = "src"}]
+requires-python = ">=3.10,<4.0"
 keywords = ["clinical-codes", "healthcare", "medical-coding", "icd10", "snomed", "api-client"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -14,23 +16,27 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
 ]
+dependencies = [
+    "requests>=2.25.0",
+    "pandas>=1.3.0",
+    "rich>=12.0.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<4.0"
-requests = ">=2.25.0"
-pandas = ">=1.3.0"
-rich = ">=12.0.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = ">=7.0"
-pytest-cov = "*"
-black = "*"
-quartodoc = "*"
-ipykernel = "^7.2.0"
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "black",
+    "quartodoc",
+    "ipykernel>=7.2.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/codeminer"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

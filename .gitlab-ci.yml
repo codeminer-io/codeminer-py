@@ -10,14 +10,13 @@ pages:
     - apt-get update -qq && apt-get install -y -qq wget > /dev/null
     - wget -qO quarto.deb https://github.com/quarto-dev/quarto-cli/releases/download/v1.7.6/quarto-1.7.6-linux-amd64.deb
     - dpkg -i quarto.deb && rm quarto.deb
-    # Install Python package + dev dependencies (including quartodoc)
-    - pip install -q poetry
-    - poetry config virtualenvs.create false
-    - poetry install --with dev -q
+    # Install uv and sync Python package + dev dependencies (including quartodoc)
+    - pip install -q uv
+    - uv sync --group dev --frozen
   script:
     - cd docs
-    - quartodoc build
-    - quarto render .
+    - uv run quartodoc build
+    - uv run quarto render .
   artifacts:
     paths:
       - public

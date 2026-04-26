@@ -1,7 +1,7 @@
 # Start from a lightweight base image with a specific Python version
 FROM python:3.11-slim
 
-# Install essential packages for pyenv and Python builds
+# Install essential packages for builds and supporting tools
 RUN apt-get update && apt-get install -y \
     curl \
     git \
@@ -38,28 +38,15 @@ RUN ARCH=$(uname -m) && \
 # Verify Quarto installation
 RUN quarto --version
 
-# Install pyenv for Python version management
-ENV PYENV_ROOT="/root/.pyenv"
-ENV PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
-RUN curl https://pyenv.run | bash
+# Install uv for Python and dependency management
+ENV UV_INSTALL_DIR="/usr/local/bin"
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install pipx and use it to install poetry
-ENV PIPX_BIN_DIR="/root/.local/bin"
-ENV PATH="$PIPX_BIN_DIR:$PATH"
-RUN pip install --no-cache-dir pipx && \
-    pipx install poetry
-
-# Install commonly used Python versions with pyenv for flexibility
-RUN pyenv install 3.9.13 && pyenv install 3.11.6
-
-# Set a default global Python version (can be overridden by individual projects)
-RUN pyenv global 3.11.6
-
-# Configure poetry to create virtual environments within each project directory
-RUN poetry config virtualenvs.in-project true
+# Configure uv to use in-project virtual environments
+ENV UV_PROJECT_ENVIRONMENT=".venv"
 
 # Install ipython and configure default IPython profile
-RUN pip install ipython && \
+RUN pip install --no-cache-dir ipython && \
     ipython profile create && \
     echo "c.InteractiveShellApp.extensions = ['autoreload']" >> /root/.ipython/profile_default/ipython_config.py && \
     echo "c.InteractiveShellApp.exec_lines = ['%autoreload 2']" >> /root/.ipython/profile_default/ipython_config.py && \
@@ -68,8 +55,5 @@ RUN pip install ipython && \
 # Set work directory (to be replaced in downstream images by project-specific directories)
 WORKDIR /app
 
-# Expose poetry and pyenv paths for downstream images
-ENV PATH="$PYENV_ROOT/shims:$PIPX_BIN_DIR:$PATH"
-
-# Optionally add an entrypoint to make poetry commands easier to run in derived images
-ENTRYPOINT ["poetry"]
+# Optionally add an entrypoint to make uv commands easier to run in derived images
+ENTRYPOINT ["uv"]
