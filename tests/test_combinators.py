@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from codeminer import OR, AND, NOT
+from codeminer import OR, AND, NOT, CodeList
 
 
 @pytest.fixture
@@ -59,3 +59,55 @@ class TestComposition:
         # (df1 OR df2) AND df1 == df1
         result = (df1 >>OR>> df2) >>AND>> df1
         assert set(result["code"]) == {"J45", "E11", "E10"}
+
+
+# ---------------------------------------------------------------------------
+# CodeList preservation through combinators
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def cl1():
+    return CodeList([
+        {"code": "J45", "description": "Asthma", "code_type": "icd10"},
+        {"code": "E11", "description": "Type 2 DM", "code_type": "icd10"},
+        {"code": "E10", "description": "Type 1 DM", "code_type": "icd10"},
+    ])
+
+
+@pytest.fixture
+def cl2():
+    return CodeList([
+        {"code": "E11", "description": "Type 2 DM", "code_type": "icd10"},
+        {"code": "I10", "description": "Hypertension", "code_type": "icd10"},
+    ])
+
+
+class TestCodeListPreservation:
+    def test_or_returns_codelist(self, cl1, cl2):
+        result = cl1 >>OR>> cl2
+        assert isinstance(result, CodeList)
+        assert set(result["code"]) == {"J45", "E11", "E10", "I10"}
+
+    def test_and_returns_codelist(self, cl1, cl2):
+        result = cl1 >>AND>> cl2
+        assert isinstance(result, CodeList)
+        assert list(result["code"]) == ["E11"]
+
+    def test_not_returns_codelist(self, cl1, cl2):
+        result = cl1 >>NOT>> cl2
+        assert isinstance(result, CodeList)
+        assert set(result["code"]) == {"J45", "E10"}
+
+    def test_or_with_mixed_types_returns_codelist(self):
+        a = CodeList([{"code": "J45", "description": "Asthma", "code_type": "icd10"}])
+        b = CodeList([{"code": "73211009", "description": "Diabetes", "code_type": "sct"}])
+        result = a >>OR>> b
+        assert isinstance(result, CodeList)
+        assert len(result) == 2
+
+    def test_combinator_with_two_column_inputs_returns_dataframe(self, df1, df2):
+        # df1/df2 lack 'code_type' — _wrap should degrade.
+        result = df1 >>OR>> df2
+        assert isinstance(result, pd.DataFrame)
+        assert not isinstance(result, CodeList)

@@ -7,6 +7,7 @@ from unittest.mock import patch, MagicMock
 import pandas as pd
 import pytest
 
+from codeminer import CodeList
 from codeminer._helpers import _get_base_url, _collect_codes, _api_request, _serialize_body
 from codeminer.exceptions import CodeMinerError
 
@@ -197,3 +198,31 @@ class TestApiRequest:
         result = _api_request("/CODES", body_params={"codes": []})
         assert isinstance(result, pd.DataFrame)
         assert len(result) == 0
+
+    @patch("codeminer._helpers.requests.post")
+    def test_returns_codelist_for_codelist_endpoints(self, mock_post, success_response):
+        mock_post.return_value = _mock_response(success_response)
+        result = _api_request(
+            "/DESCRIPTION",
+            body_params={"pattern": "asthma", "type": "icd10"},
+        )
+        assert isinstance(result, CodeList)
+
+    @patch("codeminer._helpers.requests.get")
+    def test_returns_plain_dataframe_for_metadata_shape(self, mock_get, metadata_response):
+        # /metadata payload lacks 'code' and 'description' columns,
+        # so _wrap should return a plain DataFrame, not a CodeList.
+        mock_get.return_value = _mock_response(metadata_response)
+        result = _api_request("/metadata", query_params={"type": "lookup"})
+        assert isinstance(result, pd.DataFrame)
+        assert not isinstance(result, CodeList)
+
+    @patch("codeminer._helpers.requests.post")
+    def test_empty_response_returns_plain_dataframe(self, mock_post):
+        mock = MagicMock()
+        mock.status_code = 200
+        mock.text = ""
+        mock_post.return_value = mock
+        result = _api_request("/CODES", body_params={"codes": []})
+        assert isinstance(result, pd.DataFrame)
+        assert not isinstance(result, CodeList)
