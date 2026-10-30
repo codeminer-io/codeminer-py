@@ -159,16 +159,61 @@ class TestConfigIntegration:
             body = mock.call_args.kwargs["json"]
             assert body["type"] == "bnf"
 
-    def test_config_type_used_as_map_to_type(self, success_response):
+    def test_config_map_from_and_map_to_used_by_map(self, success_response):
+        config.map_from = "icd10"
+        config.map_to = "sct"
+        with patch(
+            "codeminer._helpers.requests.post",
+            return_value=_make_response(success_response),
+        ) as mock:
+            MAP("J45")
+            body = mock.call_args.kwargs["json"]
+            assert body["from"] == "icd10"
+            assert body["to"] == "sct"
+
+    def test_explicit_map_args_override_config(self, success_response):
+        config.map_from = "icd10"
+        config.map_to = "sct"
+        with patch(
+            "codeminer._helpers.requests.post",
+            return_value=_make_response(success_response),
+        ) as mock:
+            MAP("0204", from_type="bnf", to_type="icd9")
+            body = mock.call_args.kwargs["json"]
+            assert body["from"] == "bnf"
+            assert body["to"] == "icd9"
+
+    def test_config_type_not_used_by_map(self, success_response):
         config.type = "sct"
         with patch(
             "codeminer._helpers.requests.post",
             return_value=_make_response(success_response),
         ) as mock:
-            MAP("J45", from_type="icd10")
+            MAP("J45")
             body = mock.call_args.kwargs["json"]
+            assert body["from"] is None
+            assert body["to"] is None
+
+    def test_with_type_sets_map_to_but_not_map_from(self, success_response):
+        config.map_to = "icd10"
+        with patch(
+            "codeminer._helpers.requests.post",
+            return_value=_make_response(success_response),
+        ) as mock:
+            with with_type("sct"):
+                assert config.map_to == "sct"
+                MAP("J45")
+            body = mock.call_args.kwargs["json"]
+            assert body["from"] is None
             assert body["to"] == "sct"
-            assert body["from"] == "icd10"
+        assert config.map_to == "icd10"
+
+    def test_with_type_restores_map_to_on_exception(self):
+        config.map_to = "icd10"
+        with pytest.raises(RuntimeError):
+            with with_type("sct"):
+                raise RuntimeError
+        assert config.map_to == "icd10"
 
     def test_config_lookup_version(self, success_response):
         config.lookup_version = "2024-01"

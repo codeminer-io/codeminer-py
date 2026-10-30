@@ -701,8 +701,10 @@ def MAP(
     from_type : str | None
         Source code type (e.g. ``"icd10"``). Named ``from_type`` because
         ``from`` is a Python reserved word; maps to the ``from`` API parameter.
+        Falls back to ``config.map_from`` if not provided (mirroring R's
+        ``codeminer.map_from`` option).
     to_type : str | None
-        Target code type (e.g. ``"sct"``). Falls back to ``config.type``
+        Target code type (e.g. ``"sct"``). Falls back to ``config.map_to``
         if not provided (mirroring R's ``codeminer.map_to`` option).
     map_version : str
         Version of the mapping table to use.
@@ -724,8 +726,8 @@ def MAP(
     --------
     >>> MAP("J45", from_type="icd10", to_type="sct")
     """
-    from_type = _resolve(from_type, "type")
-    to_type = _resolve(to_type, "type")
+    from_type = _resolve(from_type, "map_from")
+    to_type = _resolve(to_type, "map_to")
     map_version = _resolve(map_version, "map_version", "latest")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
 
