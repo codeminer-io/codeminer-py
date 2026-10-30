@@ -101,18 +101,22 @@ DESCRIPTION("diabetes")          # uses sct
 CODES("73211009")                # uses sct
 CHILDREN("73211009")             # uses sct
 
-# config.type also sets the default to_type for MAP
-MAP("J45", from_type="icd10")   # maps to sct
+# MAP has its own defaults; config.type doesn't apply to it
+codeminer.config.map_from = "icd10"
+codeminer.config.map_to = "sct"
+MAP("J45")                       # maps icd10 to sct
 ```
 
 Available config options:
 
 | Option | Default | Description |
 |---|---|---|
-| `config.type` | `None` | Default code type (also default `to_type` for MAP) |
+| `config.type` | `None` | Default code type (not used by MAP) |
 | `config.lookup_version` | `"latest"` | Lookup table version |
 | `config.relationship_version` | `"latest"` | Relationship table version |
 | `config.map_version` | `"latest"` | Mapping table version |
+| `config.map_from` | `None` | Default `from_type` for MAP |
+| `config.map_to` | `None` | Default `to_type` for MAP |
 | `config.base_url` | `None` | API URL (falls back to env var, then `http://127.0.0.1:8000`) |
 
 Explicit function arguments always take priority over config values.
@@ -120,8 +124,8 @@ Explicit function arguments always take priority over config values.
 ### Temporary overrides with `with_type()`
 
 Use `with_type()` when a script is predominantly one code type but needs
-to query another temporarily — mirroring R's `with_type()` / `icd10()` /
-`sct()` helpers:
+to query another temporarily — mirroring R's `with_type()`. It sets both
+`config.type` and `config.map_to` for the duration of the block:
 
 ```python
 import codeminer
@@ -129,6 +133,7 @@ from codeminer import CODES, MAP, with_type
 
 # Script works with SNOMED CT
 codeminer.config.type = "sct"
+codeminer.config.map_to = "sct"
 
 # Temporarily switch to BNF for a few queries
 with with_type("bnf"):

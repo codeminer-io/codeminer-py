@@ -6,6 +6,7 @@ singleton, or use ``with_type()`` for temporary overrides::
     import codeminer
 
     codeminer.config.type = "sct"
+    codeminer.config.map_to = "sct"
     DESCRIPTION("diabetes")  # uses sct
 
     with codeminer.with_type("bnf"):
@@ -41,15 +42,18 @@ class CodeMinerConfig:
     Attributes
     ----------
     type : str | None
-        Default code type (e.g. ``"icd10"``, ``"sct"``). Also used as the
-        default ``to_type`` for :func:`MAP`, mirroring R's behaviour where
-        ``codeminer.code_type`` also sets ``codeminer.map_to``.
+        Default code type (e.g. ``"icd10"``, ``"sct"``). Not used by
+        :func:`MAP`, which has its own ``map_from`` and ``map_to`` defaults.
     lookup_version : str
         Default lookup table version.
     relationship_version : str
         Default relationship table version.
     map_version : str
         Default mapping table version.
+    map_from : str | None
+        Default ``from_type`` for :func:`MAP`.
+    map_to : str | None
+        Default ``to_type`` for :func:`MAP`.
     base_url : str | None
         API base URL. If ``None``, falls back to the ``CODEMINER_BASE_URL``
         environment variable, then ``"http://127.0.0.1:8000"``.
@@ -60,6 +64,8 @@ class CodeMinerConfig:
         self.lookup_version: str = "latest"
         self.relationship_version: str = "latest"
         self.map_version: str = "latest"
+        self.map_from: str | None = None
+        self.map_to: str | None = None
         self.base_url: str | None = None
 
     def reset(self):
@@ -100,10 +106,11 @@ def _resolve(value, config_attr, default=None):
 
 @contextmanager
 def with_type(type: str):
-    """Temporarily set the default code type.
+    """Temporarily set the default code type and :func:`MAP` target.
 
-    Mirrors R's ``with_type()`` / ``icd10()`` / ``sct()`` helpers. The
-    previous value is restored when the block exits, even on exception.
+    Mirrors R's ``with_type()``, which sets both ``codeminer.code_type`` and
+    ``codeminer.map_to``. The previous values are restored when the block
+    exits, even on exception.
 
     Parameters
     ----------
@@ -116,8 +123,11 @@ def with_type(type: str):
     ...     bnf_codes = CODES("0204")
     """
     old_type = config.type
+    old_map_to = config.map_to
     config.type = type
+    config.map_to = type
     try:
         yield
     finally:
         config.type = old_type
+        config.map_to = old_map_to
