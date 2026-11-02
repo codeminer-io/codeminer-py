@@ -5,14 +5,14 @@ singleton, or use ``with_type()`` for temporary overrides::
 
     import codeminer
 
-    codeminer.config.type = "sct"
-    codeminer.config.map_to = "sct"
-    DESCRIPTION("diabetes")  # uses sct
+    codeminer.config.type = "SNOMED CT"
+    codeminer.config.map_to = "SNOMED CT"
+    DESCRIPTION("diabetes")  # uses SNOMED CT
 
-    with codeminer.with_type("bnf"):
-        bnf_codes = CODES("0204")  # uses bnf
+    with codeminer.with_type("BNF"):
+        bnf_codes = CODES("0204")  # uses BNF
 
-    MAP(bnf_codes)  # from_type inferred from DataFrame, to_type from config (sct)
+    MAP(bnf_codes)  # from_type inferred from DataFrame, to_type from config (SNOMED CT)
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ class CodeMinerConfig:
     Attributes
     ----------
     type : str | None
-        Default code type (e.g. ``"icd10"``, ``"sct"``). Not used by
+        Default code type (e.g. ``"ICD-10"``, ``"SNOMED CT"``). Not used by
         :func:`MAP`, which has its own ``map_from`` and ``map_to`` defaults.
     lookup_version : str
         Default lookup table version.
@@ -119,7 +119,7 @@ def with_type(type: str):
 
     Examples
     --------
-    >>> with with_type("bnf"):
+    >>> with with_type("BNF"):
     ...     bnf_codes = CODES("0204")
     """
     old_type = config.type

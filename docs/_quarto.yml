@@ -27,11 +27,13 @@ quartodoc:
         - N_CHILDREN
         - PARENTS
         - N_PARENTS
+        - get_relationship_tree
     - title: "Attributes"
       desc: "Query code attributes and relationships"
       contents:
         - ATTRIBUTES_FOR
         - HAS_ATTRIBUTES
+        - RELATIONSHIP_TYPES
         - RELATIONSHIP_TYPES_FROM
         - RELATIONSHIP_TYPES_TO
     - title: "Mapping"

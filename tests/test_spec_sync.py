@@ -25,9 +25,18 @@ ENDPOINT_FUNCTIONS = {
     "/N_PARENTS": codeminer.N_PARENTS,
     "/ATTRIBUTES_FOR": codeminer.ATTRIBUTES_FOR,
     "/HAS_ATTRIBUTES": codeminer.HAS_ATTRIBUTES,
+    "/RELATIONSHIP_TYPES": codeminer.RELATIONSHIP_TYPES,
     "/RELATIONSHIP_TYPES_FROM": codeminer.RELATIONSHIP_TYPES_FROM,
     "/RELATIONSHIP_TYPES_TO": codeminer.RELATIONSHIP_TYPES_TO,
     "/MAP": codeminer.MAP,
+    "/get_relationship_tree": codeminer.get_relationship_tree,
+}
+
+# Paging endpoints that the R client doesn't expose either
+INTERNAL_ENDPOINTS = {
+    "/CODES_ALL_CHUNK",
+    "/CODES_LIKE_CHUNK",
+    "/DESCRIPTION_CHUNK",
 }
 
 # Parameters that are Python-only (not in the API spec)
@@ -61,7 +70,7 @@ def test_all_endpoints_have_python_functions(openapi_spec):
     }
 
     python_endpoints = set(ENDPOINT_FUNCTIONS.keys())
-    missing = post_endpoints - python_endpoints
+    missing = post_endpoints - python_endpoints - INTERNAL_ENDPOINTS
 
     # Filter out test/internal endpoints
     missing = {p for p in missing if not p.startswith("/TEST_")}

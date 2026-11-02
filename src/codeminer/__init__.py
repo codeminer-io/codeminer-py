@@ -2,8 +2,8 @@
 
 Search strategies may be composed using infix operators::
 
-    DESCRIPTION("diab", type="icd10") >>AND>> (
-        CHILDREN("E10", type="icd10") >>OR>> CHILDREN("E11", type="icd10")
+    DESCRIPTION("diab", type="ICD-10") >>AND>> (
+        CHILDREN("E10", type="ICD-10") >>OR>> CHILDREN("E11", type="ICD-10")
     )
 """
 
@@ -32,10 +32,12 @@ from ._client import (
     N_CHILDREN,
     N_PARENTS,
     PARENTS,
+    RELATIONSHIP_TYPES,
     RELATIONSHIP_TYPES_FROM,
     RELATIONSHIP_TYPES_TO,
     check_api_connection,
     get_codeminer_metadata,
+    get_relationship_tree,
 )
 from ._codelist import CodeList
 from ._combinators import AND, NOT, OR
@@ -52,11 +54,13 @@ __all__ = [
     "N_PARENTS",
     "ATTRIBUTES_FOR",
     "HAS_ATTRIBUTES",
+    "RELATIONSHIP_TYPES",
     "RELATIONSHIP_TYPES_FROM",
     "RELATIONSHIP_TYPES_TO",
     "MAP",
     "check_api_connection",
     "get_codeminer_metadata",
+    "get_relationship_tree",
     "OR",
     "AND",
     "NOT",

@@ -17,11 +17,13 @@ from codeminer import (
     N_PARENTS,
     ATTRIBUTES_FOR,
     HAS_ATTRIBUTES,
+    RELATIONSHIP_TYPES,
     RELATIONSHIP_TYPES_FROM,
     RELATIONSHIP_TYPES_TO,
     MAP,
     check_api_connection,
     get_codeminer_metadata,
+    get_relationship_tree,
 )
 
 
@@ -167,11 +169,12 @@ class TestHAS_ATTRIBUTES:
 
 
 class TestRELATIONSHIP_TYPES_FROM:
-    def test_no_lookup_version(self, success_response):
+    def test_includes_lookup_options(self, success_response):
         with _mock_post(success_response) as mock:
             RELATIONSHIP_TYPES_FROM("73211009", type="sct")
             body = mock.call_args.kwargs["json"]
-            assert "lookup_version" not in body
+            assert body["lookup_version"] == "latest"
+            assert body["preferred_description_only"] is True
             assert body["relationship_version"] == "latest"
 
 
@@ -180,6 +183,63 @@ class TestRELATIONSHIP_TYPES_TO:
         with _mock_post(success_response) as mock:
             RELATIONSHIP_TYPES_TO("73211009", type="sct")
             assert mock.call_args.args[0].endswith("/RELATIONSHIP_TYPES_TO")
+
+
+class TestRELATIONSHIP_TYPES:
+    def test_sends_pattern(self, success_response):
+        with _mock_post(success_response) as mock:
+            RELATIONSHIP_TYPES("finding site", type="sct")
+            assert mock.call_args.args[0].endswith("/RELATIONSHIP_TYPES")
+            body = mock.call_args.kwargs["json"]
+            assert body["pattern"] == "finding site"
+            assert body["ignore_case"] is True
+
+    def test_pattern_is_optional(self, success_response):
+        with _mock_post(success_response) as mock:
+            RELATIONSHIP_TYPES(type="sct")
+            assert mock.call_args.kwargs["json"]["pattern"] is None
+
+
+class TestMaxNodes:
+    @pytest.mark.parametrize(
+        "func", [CHILDREN, N_CHILDREN, PARENTS, N_PARENTS, ATTRIBUTES_FOR, HAS_ATTRIBUTES]
+    )
+    def test_sent_to_server(self, func, success_response):
+        with _mock_post(success_response) as mock:
+            func("73211009", type="sct", max_nodes=50)
+            assert mock.call_args.kwargs["json"]["max_nodes"] == 50
+
+
+class TestGetRelationshipTree:
+    TREE = {
+        "result": {
+            "nodes": [
+                {"code": "E11", "term": "Diabetes", "in_input_set": True},
+                {"code": "E110", "term": "With coma", "in_input_set": False},
+            ],
+            "edges": [{"parent": "E11", "child": "E110"}],
+        }
+    }
+
+    def test_returns_nodes_and_edges(self):
+        with _mock_post(self.TREE) as mock:
+            tree = get_relationship_tree("E11", type="icd10")
+            assert mock.call_args.args[0].endswith("/get_relationship_tree")
+            assert mock.call_args.kwargs["json"]["codes"] == ["E11"]
+            assert list(tree) == ["nodes", "edges"]
+            assert tree["nodes"]["code"].tolist() == ["E11", "E110"]
+            assert len(tree["edges"]) == 1
+
+    def test_empty_edges(self):
+        leaf = {"result": {"nodes": [{"code": "E110"}], "edges": []}}
+        with _mock_post(leaf):
+            tree = get_relationship_tree("E110", type="icd10")
+            assert tree["edges"].empty
+
+    def test_return_raw(self):
+        with _mock_post(self.TREE):
+            raw = get_relationship_tree("E11", type="icd10", return_raw=True)
+            assert raw == self.TREE
 
 
 class TestMAP:

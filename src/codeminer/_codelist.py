@@ -26,7 +26,7 @@ class CodeList(pd.DataFrame):
 
     Examples
     --------
-    >>> CodeList({"code": ["J45"], "description": ["Asthma"], "code_type": ["icd10"]})
+    >>> CodeList({"code": ["J45"], "description": ["Asthma"], "code_type": ["ICD-10"]})
     """
 
     _metadata: list[str] = []

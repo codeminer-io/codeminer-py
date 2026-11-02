@@ -6,14 +6,16 @@ Python client for the [CodeMiner](https://github.com/codeminer-io/codeminer) cli
 
 ## Installation
 
+The package is not on PyPI yet, so install it from GitHub:
+
 ```bash
-pip install codeminer
+uv add git+https://github.com/codeminer-io/codeminer-py
 ```
 
-Or with Poetry:
+Or with pip:
 
 ```bash
-poetry add codeminer
+pip install git+https://github.com/codeminer-io/codeminer-py
 ```
 
 ## Connecting to the API
@@ -45,33 +47,32 @@ from codeminer import (
 
 ```python
 # Search by description
-asthma = DESCRIPTION("asthma", type="icd10")
+asthma = DESCRIPTION("asthma", type="ICD-10")
 
 # Search by code pattern
-j45_codes = CODES_LIKE("^J45", type="icd10")
+j45_codes = CODES_LIKE("^J45", type="ICD-10")
 
 # Look up specific codes
-codes = CODES("J45", "E11", type="icd10")
+codes = CODES("J45", "E11", type="ICD-10")
 ```
 
 ### Navigating hierarchies
 
 ```python
-# Immediate children
-children = CHILDREN("73211009", type="sct")
+# The code and all of its descendants
+descendants = CHILDREN("73211009", type="SNOMED CT")
 
-# All descendants (unlimited depth)
-import math
-all_descendants = N_CHILDREN("73211009", depth=math.inf, type="sct")
+# The code and its descendants, one level down
+children = N_CHILDREN("73211009", depth=1, type="SNOMED CT")
 
-# Parents
-parents = PARENTS("73211009", type="sct")
+# The code and all of its ancestors
+parents = PARENTS("73211009", type="SNOMED CT")
 ```
 
 ### Mapping between code systems
 
 ```python
-mapped = MAP("J45", from_type="icd10", to_type="sct")
+mapped = MAP("4939", from_type="ICD-9", to_type="ICD-10")
 ```
 
 ### Composing queries with infix operators
@@ -79,8 +80,8 @@ mapped = MAP("J45", from_type="icd10", to_type="sct")
 Use `>>AND>>`, `>>OR>>`, and `>>NOT>>` to combine results:
 
 ```python
-diabetes = DESCRIPTION("diabet", type="icd10") >>AND>> (
-    CHILDREN("E10", type="icd10") >>OR>> CHILDREN("E11", type="icd10")
+diabetes = DESCRIPTION("diabet", type="ICD-10") >>AND>> (
+    CHILDREN("E10", type="ICD-10") >>OR>> CHILDREN("E11", type="ICD-10")
 )
 ```
 
@@ -95,16 +96,19 @@ mirroring R's `options()` system:
 import codeminer
 
 # Set default code type — no need to pass type= on every call
-codeminer.config.type = "sct"
+codeminer.config.type = "SNOMED CT"
 
-DESCRIPTION("diabetes")          # uses sct
-CODES("73211009")                # uses sct
-CHILDREN("73211009")             # uses sct
+DESCRIPTION("diabetes")          # uses SNOMED CT
+CODES("73211009")                # uses SNOMED CT
+CHILDREN("73211009")             # uses SNOMED CT
 
 # MAP has its own defaults; config.type doesn't apply to it
-codeminer.config.map_from = "icd10"
-codeminer.config.map_to = "sct"
-MAP("J45")                       # maps icd10 to sct
+codeminer.config.map_from = "ICD-9"
+codeminer.config.map_to = "ICD-10"
+MAP("4939")                      # maps ICD-9 to ICD-10
+
+# A data frame's code type must match map_from, so clear it when passing results
+codeminer.config.map_from = None
 ```
 
 Available config options:
@@ -132,14 +136,14 @@ import codeminer
 from codeminer import CODES, MAP, with_type
 
 # Script works with SNOMED CT
-codeminer.config.type = "sct"
-codeminer.config.map_to = "sct"
+codeminer.config.type = "SNOMED CT"
+codeminer.config.map_to = "SNOMED CT"
 
 # Temporarily switch to BNF for a few queries
-with with_type("bnf"):
+with with_type("BNF"):
     bnf_codes = CODES("0204")
 
-# Back to sct context
+# Back to SNOMED CT
 # from_type inferred from the DataFrame, to_type from config
 mapped = MAP(bnf_codes)
 ```
@@ -147,16 +151,16 @@ mapped = MAP(bnf_codes)
 Nesting is supported:
 
 ```python
-codeminer.config.type = "sct"
+codeminer.config.type = "SNOMED CT"
 
-with with_type("icd10"):
+with with_type("ICD-10"):
     icd_codes = DESCRIPTION("diabetes")
-    with with_type("bnf"):
+    with with_type("BNF"):
         bnf_codes = CODES("0601")
-    # back to icd10
+    # back to ICD-10
     more_icd = CODES("E10")
 
-# back to sct
+# back to SNOMED CT
 sct_codes = DESCRIPTION("diabetes")
 ```
 
@@ -166,14 +170,14 @@ Functions accept DataFrames from previous queries. The code type is
 inferred from the DataFrame's `code_type` column:
 
 ```python
-codeminer.config.type = "sct"
+codeminer.config.type = "SNOMED CT"
 
 # Build up a codelist
 asthma = DESCRIPTION("asthma")
 asthma_children = CHILDREN(asthma)
 
 # Map to ICD-10 (from_type inferred, to_type set explicitly)
-mapped = MAP(asthma, to_type="icd10")
+mapped = MAP(asthma, to_type="ICD-10")
 ```
 
 ### Resetting config
@@ -200,5 +204,5 @@ import os
 os.environ["CODEMINER_BASE_URL"] = "http://myserver:9000"
 
 # Option 3: per-call
-DESCRIPTION("asthma", type="icd10", base_url="http://myserver:9000")
+DESCRIPTION("asthma", type="ICD-10", base_url="http://myserver:9000")
 ```

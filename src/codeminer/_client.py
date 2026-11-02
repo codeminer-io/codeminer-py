@@ -42,7 +42,7 @@ def DESCRIPTION(
     pattern : str
         Regex pattern to match against code descriptions.
     type : str | None
-        Code type to search (e.g. ``"icd10"``, ``"sct"``). Falls back to
+        Code type to search (e.g. ``"ICD-10"``, ``"SNOMED CT"``). Falls back to
         ``config.type`` if not provided.
     lookup_version : str
         Version of the lookup table to use.
@@ -65,8 +65,8 @@ def DESCRIPTION(
 
     Examples
     --------
-    >>> DESCRIPTION("asthma", type="icd10")
-    >>> DESCRIPTION("diabet", type="sct", ignore_case=True)
+    >>> DESCRIPTION("asthma", type="ICD-10")
+    >>> DESCRIPTION("diabet", type="SNOMED CT", ignore_case=True)
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
@@ -119,7 +119,7 @@ def CODES_LIKE(
 
     Examples
     --------
-    >>> CODES_LIKE("^J45", type="icd10")
+    >>> CODES_LIKE("^J45", type="ICD-10")
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
@@ -158,7 +158,7 @@ def CODES(
         Individual code strings, or a single DataFrame with ``code`` and
         ``code_type`` columns.
     type : str | None
-        Code type (e.g. ``"icd10"``, ``"sct"``).
+        Code type (e.g. ``"ICD-10"``, ``"SNOMED CT"``).
     lookup_version : str
         Version of the lookup table to use.
     preferred_description_only : bool
@@ -177,7 +177,7 @@ def CODES(
 
     Examples
     --------
-    >>> CODES("J45", "E11", type="icd10")
+    >>> CODES("J45", "E11", type="ICD-10")
     >>> CODES(existing_codelist)
     """
     type = _resolve(type, "type")
@@ -202,11 +202,12 @@ def CHILDREN(
     lookup_version: str = _unset,
     relationship_version: str = _unset,
     preferred_description_only: bool = True,
+    max_nodes: int = 20000,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
-    """Get immediate child codes in the hierarchy.
+    """Get codes and all of their descendants in the hierarchy.
 
     Parameters
     ----------
@@ -220,6 +221,9 @@ def CHILDREN(
         Version of the relationship table to use.
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
+    max_nodes : int
+        Ceiling on the number of codes the traversal can accumulate before
+        the server raises an error.
     col_filters : str | dict | None
         Column filter specification.
     return_raw : bool
@@ -230,11 +234,11 @@ def CHILDREN(
     Returns
     -------
     pd.DataFrame | dict
-        A DataFrame of child codes, or raw JSON if ``return_raw=True``.
+        A DataFrame of the input codes and their descendants, or raw JSON if ``return_raw=True``.
 
     Examples
     --------
-    >>> CHILDREN("73211009", type="sct")
+    >>> CHILDREN("73211009", type="SNOMED CT")
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
@@ -247,6 +251,7 @@ def CHILDREN(
         "lookup_version": lookup_version,
         "relationship_version": relationship_version,
         "preferred_description_only": preferred_description_only,
+        "max_nodes": max_nodes,
         "col_filters": col_filters,
     }
     return _api_request(
@@ -261,18 +266,20 @@ def N_CHILDREN(
     lookup_version: str = _unset,
     relationship_version: str = _unset,
     preferred_description_only: bool = True,
+    max_nodes: int = 20000,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
-    """Get child codes to a specified depth in the hierarchy.
+    """Get codes and their descendants to a specified depth in the hierarchy.
 
     Parameters
     ----------
     *codes : str | pd.DataFrame
         Parent code(s) to find descendants of.
     depth : int | float
-        Maximum depth to traverse. Use ``math.inf`` for unlimited depth.
+        Number of levels to traverse, at least 1. Use ``math.inf`` for unlimited
+        depth.
     type : str | None
         Code type.
     lookup_version : str
@@ -281,6 +288,9 @@ def N_CHILDREN(
         Version of the relationship table to use.
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
+    max_nodes : int
+        Ceiling on the number of codes the traversal can accumulate before
+        the server raises an error.
     col_filters : str | dict | None
         Column filter specification.
     return_raw : bool
@@ -291,12 +301,12 @@ def N_CHILDREN(
     Returns
     -------
     pd.DataFrame | dict
-        A DataFrame of descendant codes, or raw JSON if ``return_raw=True``.
+        A DataFrame of the input codes and their descendants, or raw JSON if ``return_raw=True``.
 
     Examples
     --------
-    >>> N_CHILDREN("73211009", depth=2, type="sct")
-    >>> N_CHILDREN("73211009", depth=math.inf, type="sct")
+    >>> N_CHILDREN("73211009", depth=2, type="SNOMED CT")
+    >>> N_CHILDREN("73211009", depth=math.inf, type="SNOMED CT")
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
@@ -310,6 +320,7 @@ def N_CHILDREN(
         "lookup_version": lookup_version,
         "relationship_version": relationship_version,
         "preferred_description_only": preferred_description_only,
+        "max_nodes": max_nodes,
         "col_filters": col_filters,
     }
     return _api_request(
@@ -323,11 +334,12 @@ def PARENTS(
     lookup_version: str = _unset,
     relationship_version: str = _unset,
     preferred_description_only: bool = True,
+    max_nodes: int = 20000,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
-    """Get immediate parent codes in the hierarchy.
+    """Get codes and all of their ancestors in the hierarchy.
 
     Parameters
     ----------
@@ -341,6 +353,9 @@ def PARENTS(
         Version of the relationship table to use.
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
+    max_nodes : int
+        Ceiling on the number of codes the traversal can accumulate before
+        the server raises an error.
     col_filters : str | dict | None
         Column filter specification.
     return_raw : bool
@@ -351,11 +366,11 @@ def PARENTS(
     Returns
     -------
     pd.DataFrame | dict
-        A DataFrame of parent codes, or raw JSON if ``return_raw=True``.
+        A DataFrame of the input codes and their ancestors, or raw JSON if ``return_raw=True``.
 
     Examples
     --------
-    >>> PARENTS("73211009", type="sct")
+    >>> PARENTS("73211009", type="SNOMED CT")
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
@@ -368,6 +383,7 @@ def PARENTS(
         "lookup_version": lookup_version,
         "relationship_version": relationship_version,
         "preferred_description_only": preferred_description_only,
+        "max_nodes": max_nodes,
         "col_filters": col_filters,
     }
     return _api_request(
@@ -382,18 +398,20 @@ def N_PARENTS(
     lookup_version: str = _unset,
     relationship_version: str = _unset,
     preferred_description_only: bool = True,
+    max_nodes: int = 20000,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
-    """Get parent codes to a specified depth in the hierarchy.
+    """Get codes and their ancestors to a specified depth in the hierarchy.
 
     Parameters
     ----------
     *codes : str | pd.DataFrame
         Child code(s) to find ancestors of.
     depth : int | float
-        Maximum depth to traverse. Use ``math.inf`` for unlimited depth.
+        Number of levels to traverse, at least 1. Use ``math.inf`` for unlimited
+        depth.
     type : str | None
         Code type.
     lookup_version : str
@@ -402,6 +420,9 @@ def N_PARENTS(
         Version of the relationship table to use.
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
+    max_nodes : int
+        Ceiling on the number of codes the traversal can accumulate before
+        the server raises an error.
     col_filters : str | dict | None
         Column filter specification.
     return_raw : bool
@@ -412,11 +433,11 @@ def N_PARENTS(
     Returns
     -------
     pd.DataFrame | dict
-        A DataFrame of ancestor codes, or raw JSON if ``return_raw=True``.
+        A DataFrame of the input codes and their ancestors, or raw JSON if ``return_raw=True``.
 
     Examples
     --------
-    >>> N_PARENTS("73211009", depth=2, type="sct")
+    >>> N_PARENTS("73211009", depth=2, type="SNOMED CT")
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
@@ -430,6 +451,7 @@ def N_PARENTS(
         "lookup_version": lookup_version,
         "relationship_version": relationship_version,
         "preferred_description_only": preferred_description_only,
+        "max_nodes": max_nodes,
         "col_filters": col_filters,
     }
     return _api_request(
@@ -444,6 +466,7 @@ def ATTRIBUTES_FOR(
     relationship_version: str = _unset,
     relationship_types: list[str] | pd.DataFrame | None = None,
     preferred_description_only: bool = True,
+    max_nodes: int = 20000,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
@@ -465,6 +488,9 @@ def ATTRIBUTES_FOR(
         a DataFrame with a ``code`` column.
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
+    max_nodes : int
+        Ceiling on the number of codes the traversal can accumulate before
+        the server raises an error.
     col_filters : str | dict | None
         Column filter specification.
     return_raw : bool
@@ -479,7 +505,7 @@ def ATTRIBUTES_FOR(
 
     Examples
     --------
-    >>> ATTRIBUTES_FOR("73211009", type="sct")
+    >>> ATTRIBUTES_FOR("73211009", type="SNOMED CT")
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
@@ -498,6 +524,7 @@ def ATTRIBUTES_FOR(
         "relationship_version": relationship_version,
         "relationship_types": relationship_types,
         "preferred_description_only": preferred_description_only,
+        "max_nodes": max_nodes,
         "col_filters": col_filters,
     }
     return _api_request(
@@ -515,6 +542,7 @@ def HAS_ATTRIBUTES(
     relationship_version: str = _unset,
     relationship_types: list[str] | pd.DataFrame | None = None,
     preferred_description_only: bool = True,
+    max_nodes: int = 20000,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
@@ -536,6 +564,9 @@ def HAS_ATTRIBUTES(
         a DataFrame with a ``code`` column.
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
+    max_nodes : int
+        Ceiling on the number of codes the traversal can accumulate before
+        the server raises an error.
     col_filters : str | dict | None
         Column filter specification.
     return_raw : bool
@@ -550,7 +581,7 @@ def HAS_ATTRIBUTES(
 
     Examples
     --------
-    >>> HAS_ATTRIBUTES("73211009", type="sct")
+    >>> HAS_ATTRIBUTES("73211009", type="SNOMED CT")
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
@@ -568,6 +599,7 @@ def HAS_ATTRIBUTES(
         "relationship_version": relationship_version,
         "relationship_types": relationship_types,
         "preferred_description_only": preferred_description_only,
+        "max_nodes": max_nodes,
         "col_filters": col_filters,
     }
     return _api_request(
@@ -582,6 +614,8 @@ def RELATIONSHIP_TYPES_FROM(
     *codes: str | pd.DataFrame,
     type: str | None = _unset,
     relationship_version: str = _unset,
+    lookup_version: str = _unset,
+    preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
@@ -596,6 +630,10 @@ def RELATIONSHIP_TYPES_FROM(
         Code type.
     relationship_version : str
         Version of the relationship table to use.
+    lookup_version : str
+        Version of the lookup table to use.
+    preferred_description_only : bool
+        If ``True``, return only preferred descriptions.
     col_filters : str | dict | None
         Column filter specification.
     return_raw : bool
@@ -610,16 +648,19 @@ def RELATIONSHIP_TYPES_FROM(
 
     Examples
     --------
-    >>> RELATIONSHIP_TYPES_FROM("73211009", type="sct")
+    >>> RELATIONSHIP_TYPES_FROM("73211009", type="SNOMED CT")
     """
     type = _resolve(type, "type")
     relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
         "codes": collected_codes,
         "type": df_type or type,
         "relationship_version": relationship_version,
+        "lookup_version": lookup_version,
+        "preferred_description_only": preferred_description_only,
         "col_filters": col_filters,
     }
     return _api_request(
@@ -634,6 +675,8 @@ def RELATIONSHIP_TYPES_TO(
     *codes: str | pd.DataFrame,
     type: str | None = _unset,
     relationship_version: str = _unset,
+    lookup_version: str = _unset,
+    preferred_description_only: bool = True,
     col_filters: str | dict | None = "default",
     return_raw: bool = False,
     base_url: str | None = None,
@@ -648,6 +691,10 @@ def RELATIONSHIP_TYPES_TO(
         Code type.
     relationship_version : str
         Version of the relationship table to use.
+    lookup_version : str
+        Version of the lookup table to use.
+    preferred_description_only : bool
+        If ``True``, return only preferred descriptions.
     col_filters : str | dict | None
         Column filter specification.
     return_raw : bool
@@ -662,20 +709,89 @@ def RELATIONSHIP_TYPES_TO(
 
     Examples
     --------
-    >>> RELATIONSHIP_TYPES_TO("73211009", type="sct")
+    >>> RELATIONSHIP_TYPES_TO("73211009", type="SNOMED CT")
     """
     type = _resolve(type, "type")
     relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
         "codes": collected_codes,
         "type": df_type or type,
         "relationship_version": relationship_version,
+        "lookup_version": lookup_version,
+        "preferred_description_only": preferred_description_only,
         "col_filters": col_filters,
     }
     return _api_request(
         "/RELATIONSHIP_TYPES_TO",
+        body_params=body_params,
+        return_raw=return_raw,
+        base_url=base_url,
+    )
+
+
+def RELATIONSHIP_TYPES(
+    pattern: str | None = None,
+    type: str | None = _unset,
+    relationship_version: str = _unset,
+    lookup_version: str = _unset,
+    ignore_case: bool = True,
+    preferred_description_only: bool = True,
+    col_filters: str | dict | None = "default",
+    return_raw: bool = False,
+    base_url: str | None = None,
+) -> pd.DataFrame | dict:
+    """List the relationship types in a code type's relationship table.
+
+    Parameters
+    ----------
+    pattern : str | None
+        Regex pattern to match against relationship type descriptions. If
+        ``None``, return all relationship types.
+    type : str | None
+        Code type.
+    relationship_version : str
+        Version of the relationship table to use.
+    lookup_version : str
+        Version of the lookup table to use.
+    ignore_case : bool
+        Whether pattern matching should be case-insensitive.
+    preferred_description_only : bool
+        If ``True``, return only preferred descriptions.
+    col_filters : str | dict | None
+        Column filter specification.
+    return_raw : bool
+        If ``True``, return the raw JSON response dict.
+    base_url : str | None
+        Override the API base URL.
+
+    Returns
+    -------
+    pd.DataFrame | dict
+        A DataFrame of relationship types, or raw JSON if ``return_raw=True``.
+
+    Examples
+    --------
+    >>> RELATIONSHIP_TYPES(type="SNOMED CT")
+    >>> RELATIONSHIP_TYPES("finding site", type="SNOMED CT")
+    """
+    type = _resolve(type, "type")
+    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+
+    body_params = {
+        "pattern": pattern,
+        "type": type,
+        "relationship_version": relationship_version,
+        "lookup_version": lookup_version,
+        "ignore_case": ignore_case,
+        "preferred_description_only": preferred_description_only,
+        "col_filters": col_filters,
+    }
+    return _api_request(
+        "/RELATIONSHIP_TYPES",
         body_params=body_params,
         return_raw=return_raw,
         base_url=base_url,
@@ -699,12 +815,12 @@ def MAP(
     *codes : str | pd.DataFrame
         Code(s) to map.
     from_type : str | None
-        Source code type (e.g. ``"icd10"``). Named ``from_type`` because
+        Source code type (e.g. ``"ICD-10"``). Named ``from_type`` because
         ``from`` is a Python reserved word; maps to the ``from`` API parameter.
         Falls back to ``config.map_from`` if not provided (mirroring R's
         ``codeminer.map_from`` option).
     to_type : str | None
-        Target code type (e.g. ``"sct"``). Falls back to ``config.map_to``
+        Target code type (e.g. ``"SNOMED CT"``). Falls back to ``config.map_to``
         if not provided (mirroring R's ``codeminer.map_to`` option).
     map_version : str
         Version of the mapping table to use.
@@ -724,7 +840,7 @@ def MAP(
 
     Examples
     --------
-    >>> MAP("J45", from_type="icd10", to_type="sct")
+    >>> MAP("4939", from_type="ICD-9", to_type="ICD-10")
     """
     from_type = _resolve(from_type, "map_from")
     to_type = _resolve(to_type, "map_to")
@@ -743,6 +859,88 @@ def MAP(
     return _api_request(
         "/MAP", body_params=body_params, return_raw=return_raw, base_url=base_url
     )
+
+
+def get_relationship_tree(
+    *codes: str | pd.DataFrame,
+    type: str | None = _unset,
+    expand_to_descendants: bool = True,
+    max_codes: int = 10000,
+    relationship_version: str = _unset,
+    lookup_version: str = _unset,
+    col_filters: str | dict | None = "default",
+    preferred_description_only: bool = True,
+    return_raw: bool = False,
+    base_url: str | None = None,
+) -> dict:
+    """Get the hierarchy around a set of codes as nodes and edges.
+
+    Parameters
+    ----------
+    *codes : str | pd.DataFrame
+        Code(s) to build the tree from.
+    type : str | None
+        Code type.
+    expand_to_descendants : bool
+        If ``True``, include the descendants of the input codes.
+    max_codes : int
+        Ceiling on the number of codes in the tree.
+    relationship_version : str
+        Version of the relationship table to use.
+    lookup_version : str
+        Version of the lookup table to use.
+    col_filters : str | dict | None
+        Column filter specification.
+    preferred_description_only : bool
+        If ``True``, return only preferred descriptions.
+    return_raw : bool
+        If ``True``, return the raw JSON response dict.
+    base_url : str | None
+        Override the API base URL.
+
+    Returns
+    -------
+    dict
+        A dict with ``"nodes"`` and ``"edges"`` DataFrames, or raw JSON if
+        ``return_raw=True``.
+
+    Examples
+    --------
+    >>> tree = get_relationship_tree("E11", type="ICD-10")
+    >>> tree["edges"]
+    """
+    type = _resolve(type, "type")
+    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+
+    collected_codes, df_type = _collect_codes(*codes, type=type)
+    body_params = {
+        "codes": collected_codes,
+        "type": df_type or type,
+        "expand_to_descendants": expand_to_descendants,
+        "max_codes": max_codes,
+        "relationship_version": relationship_version,
+        "lookup_version": lookup_version,
+        "col_filters": col_filters,
+        "preferred_description_only": preferred_description_only,
+    }
+
+    # Always get raw to handle the nested structure ourselves
+    raw = _api_request(
+        "/get_relationship_tree",
+        body_params=body_params,
+        return_raw=True,
+        base_url=base_url,
+    )
+
+    if return_raw:
+        return raw
+
+    result = raw.get("result", raw)
+    return {
+        "nodes": pd.DataFrame(result["nodes"]),
+        "edges": pd.DataFrame(result["edges"]),
+    }
 
 
 # ---------------------------------------------------------------------------
