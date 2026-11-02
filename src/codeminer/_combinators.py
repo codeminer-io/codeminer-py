@@ -3,8 +3,8 @@
 Provides ``OR``, ``AND``, and ``NOT`` operators that can be used with
 the ``>>OP>>`` infix syntax to combine DataFrames::
 
-    DESCRIPTION("diab", type="icd10") >>AND>> (
-        CHILDREN("E10", type="icd10") >>OR>> CHILDREN("E11", type="icd10")
+    DESCRIPTION("diab", type="ICD-10") >>AND>> (
+        CHILDREN("E10", type="ICD-10") >>OR>> CHILDREN("E11", type="ICD-10")
     )
 """
 
