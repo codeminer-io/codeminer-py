@@ -13,19 +13,14 @@ This package is alpha software, so its interface may change between releases.
 
 ## Installation
 
-Requires Python 3.10 or later.
+Requires Python 3.10 or later. The package is not on PyPI yet, so install it from
+GitHub:
 
 ```bash
-uv add codeminer
+uv add git+https://github.com/codeminer-io/codeminer-py
 ```
 
 Or with pip:
-
-```bash
-pip install codeminer
-```
-
-For the latest development version, install from GitHub:
 
 ```bash
 pip install git+https://github.com/codeminer-io/codeminer-py
