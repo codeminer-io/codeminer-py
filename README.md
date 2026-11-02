@@ -1,5 +1,9 @@
 # codeminer
 
+<!-- badges: start -->
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+<!-- badges: end -->
+
 Python client for the [CodeMiner](https://github.com/codeminer-io/codeminer) REST
 API. Search clinical coding systems such as ICD-10, SNOMED CT, Read codes and
 BNF, walk their hierarchies, map between them, and build codelists as pandas
@@ -248,6 +252,6 @@ server, and they are skipped if none is available.
 
 ## Licence
 
-This client is released under the [MIT Licence](LICENSE). The API server and
+This client is released under the [MIT Licence](https://github.com/codeminer-io/codeminer-py/blob/main/LICENSE). The API server and
 clinical code data have their own terms, and much of that data is licensed by its
 publishers.
