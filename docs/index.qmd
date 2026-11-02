@@ -6,13 +6,17 @@ Python client for the [CodeMiner](https://github.com/codeminer-io/codeminer) cli
 
 ## Installation
 
-The package is not on PyPI yet, so install it from GitHub:
-
 ```bash
-uv add git+https://github.com/codeminer-io/codeminer-py
+uv add codeminer
 ```
 
 Or with pip:
+
+```bash
+pip install codeminer
+```
+
+For the latest development version, install from GitHub:
 
 ```bash
 pip install git+https://github.com/codeminer-io/codeminer-py
