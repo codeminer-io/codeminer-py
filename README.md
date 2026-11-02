@@ -17,14 +17,16 @@ Requires Python 3.10 or later. The package is not on PyPI yet, so install it fro
 GitHub:
 
 ```bash
-uv add git+https://github.com/codeminer-io/codeminer-py
+uv add git+https://github.com/codeminer-io/codeminer-py@v0.2.0
 ```
 
 Or with pip:
 
 ```bash
-pip install git+https://github.com/codeminer-io/codeminer-py
+pip install git+https://github.com/codeminer-io/codeminer-py@v0.2.0
 ```
+
+Leave off `@v0.2.0` to get the latest development version.
 
 ## Connecting to a server
 
