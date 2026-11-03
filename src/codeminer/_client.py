@@ -15,10 +15,9 @@ from typing import Union
 import pandas as pd
 import requests
 
-from ._config import _unset, _resolve
+from ._config import _resolve, _resolve_raw, _unset
 from ._helpers import _api_request, _collect_codes, _get_base_url
 from .exceptions import CodeMinerError
-
 
 # ---------------------------------------------------------------------------
 # Pattern-based search functions
@@ -31,7 +30,7 @@ def DESCRIPTION(
     lookup_version: str = _unset,
     ignore_case: bool = True,
     preferred_description_only: bool = True,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -52,7 +51,8 @@ def DESCRIPTION(
         If ``True``, return only preferred descriptions.
     col_filters : str | dict | None
         Column filter specification. ``"default"`` for standard filters,
-        ``None`` for no filtering, or a dict for custom filters.
+        ``None`` for no filtering, or a dict for custom filters. Falls back
+        to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -70,6 +70,7 @@ def DESCRIPTION(
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     body_params = {
         "pattern": pattern,
@@ -80,7 +81,10 @@ def DESCRIPTION(
         "col_filters": col_filters,
     }
     return _api_request(
-        "/DESCRIPTION", body_params=body_params, return_raw=return_raw, base_url=base_url
+        "/DESCRIPTION",
+        body_params=body_params,
+        return_raw=return_raw,
+        base_url=base_url,
     )
 
 
@@ -89,7 +93,7 @@ def CODES_LIKE(
     type: str | None = _unset,
     lookup_version: str = _unset,
     preferred_description_only: bool = True,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -106,7 +110,7 @@ def CODES_LIKE(
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -123,6 +127,7 @@ def CODES_LIKE(
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     body_params = {
         "pattern": pattern,
@@ -146,7 +151,7 @@ def CODES(
     type: str | None = _unset,
     lookup_version: str = _unset,
     preferred_description_only: bool = True,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -164,7 +169,7 @@ def CODES(
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -182,6 +187,7 @@ def CODES(
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
@@ -203,7 +209,7 @@ def CHILDREN(
     relationship_version: str = _unset,
     preferred_description_only: bool = True,
     max_nodes: int = 20000,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -225,7 +231,7 @@ def CHILDREN(
         Ceiling on the number of codes the traversal can accumulate before
         the server raises an error.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -242,7 +248,10 @@ def CHILDREN(
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
-    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    relationship_version = _resolve(
+        relationship_version, "relationship_version", "latest"
+    )
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
@@ -267,7 +276,7 @@ def N_CHILDREN(
     relationship_version: str = _unset,
     preferred_description_only: bool = True,
     max_nodes: int = 20000,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -292,7 +301,7 @@ def N_CHILDREN(
         Ceiling on the number of codes the traversal can accumulate before
         the server raises an error.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -310,7 +319,10 @@ def N_CHILDREN(
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
-    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    relationship_version = _resolve(
+        relationship_version, "relationship_version", "latest"
+    )
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
@@ -335,7 +347,7 @@ def PARENTS(
     relationship_version: str = _unset,
     preferred_description_only: bool = True,
     max_nodes: int = 20000,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -357,7 +369,7 @@ def PARENTS(
         Ceiling on the number of codes the traversal can accumulate before
         the server raises an error.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -374,7 +386,10 @@ def PARENTS(
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
-    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    relationship_version = _resolve(
+        relationship_version, "relationship_version", "latest"
+    )
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
@@ -399,7 +414,7 @@ def N_PARENTS(
     relationship_version: str = _unset,
     preferred_description_only: bool = True,
     max_nodes: int = 20000,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -424,7 +439,7 @@ def N_PARENTS(
         Ceiling on the number of codes the traversal can accumulate before
         the server raises an error.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -441,7 +456,10 @@ def N_PARENTS(
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
-    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    relationship_version = _resolve(
+        relationship_version, "relationship_version", "latest"
+    )
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
@@ -467,7 +485,7 @@ def ATTRIBUTES_FOR(
     relationship_types: list[str] | pd.DataFrame | None = None,
     preferred_description_only: bool = True,
     max_nodes: int = 20000,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -492,7 +510,7 @@ def ATTRIBUTES_FOR(
         Ceiling on the number of codes the traversal can accumulate before
         the server raises an error.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -509,7 +527,10 @@ def ATTRIBUTES_FOR(
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
-    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    relationship_version = _resolve(
+        relationship_version, "relationship_version", "latest"
+    )
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
 
@@ -543,7 +564,7 @@ def HAS_ATTRIBUTES(
     relationship_types: list[str] | pd.DataFrame | None = None,
     preferred_description_only: bool = True,
     max_nodes: int = 20000,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -568,7 +589,7 @@ def HAS_ATTRIBUTES(
         Ceiling on the number of codes the traversal can accumulate before
         the server raises an error.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -585,7 +606,10 @@ def HAS_ATTRIBUTES(
     """
     type = _resolve(type, "type")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
-    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    relationship_version = _resolve(
+        relationship_version, "relationship_version", "latest"
+    )
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
 
@@ -616,7 +640,7 @@ def RELATIONSHIP_TYPES_FROM(
     relationship_version: str = _unset,
     lookup_version: str = _unset,
     preferred_description_only: bool = True,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -635,7 +659,7 @@ def RELATIONSHIP_TYPES_FROM(
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -651,8 +675,11 @@ def RELATIONSHIP_TYPES_FROM(
     >>> RELATIONSHIP_TYPES_FROM("73211009", type="SNOMED CT")
     """
     type = _resolve(type, "type")
-    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    relationship_version = _resolve(
+        relationship_version, "relationship_version", "latest"
+    )
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
@@ -677,7 +704,7 @@ def RELATIONSHIP_TYPES_TO(
     relationship_version: str = _unset,
     lookup_version: str = _unset,
     preferred_description_only: bool = True,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -696,7 +723,7 @@ def RELATIONSHIP_TYPES_TO(
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -712,8 +739,11 @@ def RELATIONSHIP_TYPES_TO(
     >>> RELATIONSHIP_TYPES_TO("73211009", type="SNOMED CT")
     """
     type = _resolve(type, "type")
-    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    relationship_version = _resolve(
+        relationship_version, "relationship_version", "latest"
+    )
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
@@ -739,7 +769,7 @@ def RELATIONSHIP_TYPES(
     lookup_version: str = _unset,
     ignore_case: bool = True,
     preferred_description_only: bool = True,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -761,7 +791,7 @@ def RELATIONSHIP_TYPES(
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -778,8 +808,11 @@ def RELATIONSHIP_TYPES(
     >>> RELATIONSHIP_TYPES("finding site", type="SNOMED CT")
     """
     type = _resolve(type, "type")
-    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    relationship_version = _resolve(
+        relationship_version, "relationship_version", "latest"
+    )
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     body_params = {
         "pattern": pattern,
@@ -804,7 +837,7 @@ def MAP(
     to_type: str | None = _unset,
     map_version: str = _unset,
     lookup_version: str = _unset,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     return_raw: bool = False,
     base_url: str | None = None,
 ) -> pd.DataFrame | dict:
@@ -827,7 +860,7 @@ def MAP(
     lookup_version : str
         Version of the lookup table to use.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     return_raw : bool
         If ``True``, return the raw JSON response dict.
     base_url : str | None
@@ -846,6 +879,7 @@ def MAP(
     to_type = _resolve(to_type, "map_to")
     map_version = _resolve(map_version, "map_version", "latest")
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=from_type)
     body_params = {
@@ -868,7 +902,7 @@ def get_relationship_tree(
     max_codes: int = 10000,
     relationship_version: str = _unset,
     lookup_version: str = _unset,
-    col_filters: str | dict | None = "default",
+    col_filters: str | dict | None = _unset,
     preferred_description_only: bool = True,
     return_raw: bool = False,
     base_url: str | None = None,
@@ -890,7 +924,7 @@ def get_relationship_tree(
     lookup_version : str
         Version of the lookup table to use.
     col_filters : str | dict | None
-        Column filter specification.
+        Column filter specification. Falls back to ``config.col_filters``.
     preferred_description_only : bool
         If ``True``, return only preferred descriptions.
     return_raw : bool
@@ -910,8 +944,11 @@ def get_relationship_tree(
     >>> tree["edges"]
     """
     type = _resolve(type, "type")
-    relationship_version = _resolve(relationship_version, "relationship_version", "latest")
+    relationship_version = _resolve(
+        relationship_version, "relationship_version", "latest"
+    )
     lookup_version = _resolve(lookup_version, "lookup_version", "latest")
+    col_filters = _resolve_raw(col_filters, "col_filters")
 
     collected_codes, df_type = _collect_codes(*codes, type=type)
     body_params = {
