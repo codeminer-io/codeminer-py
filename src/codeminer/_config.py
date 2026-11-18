@@ -33,6 +33,18 @@ class _Unset:
 _unset = _Unset()
 
 
+_OPTIONS = (
+    "type",
+    "lookup_version",
+    "relationship_version",
+    "map_version",
+    "map_from",
+    "map_to",
+    "base_url",
+    "col_filters",
+)
+
+
 class CodeMinerConfig:
     """Global configuration for the codeminer client.
 
@@ -57,6 +69,12 @@ class CodeMinerConfig:
     base_url : str | None
         API base URL. If ``None``, falls back to the ``CODEMINER_BASE_URL``
         environment variable, then ``"http://127.0.0.1:8000"``.
+    col_filters : str | dict | None
+        Column filters sent when a call passes none. ``"default"`` for the
+        server's default filters, ``None`` for no filtering, or a table-keyed
+        dict such as ``{"relationship": {"SNOMED CT": None}}`` to include
+        inactive SNOMED CT relationships in every query. An explicit
+        ``col_filters`` argument always wins.
     """
 
     def __init__(self):
@@ -67,6 +85,16 @@ class CodeMinerConfig:
         self.map_from: str | None = None
         self.map_to: str | None = None
         self.base_url: str | None = None
+        self.col_filters: str | dict | None = "default"
+
+    def __setattr__(self, name, value):
+        # Only the options set in __init__ exist, so a misspelt name fails
+        # loudly instead of silently creating an attribute nothing reads.
+        if name not in _OPTIONS:
+            raise AttributeError(
+                f"config has no option {name!r}. Options: {', '.join(_OPTIONS)}"
+            )
+        object.__setattr__(self, name, value)
 
     def reset(self):
         """Reset all options to their defaults."""
@@ -102,6 +130,18 @@ def _resolve(value, config_attr, default=None):
     if config_value is not None:
         return config_value
     return default
+
+
+def _resolve_raw(value, config_attr):
+    """Resolve a parameter value: explicit arg > config, with ``None`` kept.
+
+    For options where ``None`` is a meaningful value (``col_filters``: no
+    filtering), so unlike :func:`_resolve` a ``None`` in the config is
+    returned as is rather than treated as unset.
+    """
+    if not isinstance(value, _Unset):
+        return value
+    return getattr(config, config_attr)
 
 
 @contextmanager

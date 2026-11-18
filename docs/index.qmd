@@ -121,6 +121,7 @@ Available config options:
 | `config.map_version` | `"latest"` | Mapping table version |
 | `config.map_from` | `None` | Default `from_type` for MAP |
 | `config.map_to` | `None` | Default `to_type` for MAP |
+| `config.col_filters` | `"default"` | Column filters sent when a call passes none. `None` turns filtering off; a dict such as `{"relationship": {"SNOMED CT": None}}` is sent as given |
 | `config.base_url` | `None` | API URL (falls back to env var, then `http://127.0.0.1:8000`) |
 
 Explicit function arguments always take priority over config values.

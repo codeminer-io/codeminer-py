@@ -189,6 +189,7 @@ codeminer.config.reset()
 | `lookup_version` | `"latest"` | Lookup table version |
 | `relationship_version` | `"latest"` | Relationship table version |
 | `map_version` | `"latest"` | Mapping table version |
+| `col_filters` | `"default"` | Column filters sent when a call passes none. `None` turns filtering off; a dict such as `{"relationship": {"SNOMED CT": None}}` is sent as given |
 | `base_url` | `None` | API server URL |
 
 The server URL is resolved in this order:

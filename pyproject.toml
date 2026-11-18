@@ -1,6 +1,6 @@
 [project]
 name = "codeminer"
-version = "0.2.0"
+version = "0.3.0"
 description = "Python client for the CodeMiner clinical code API"
 authors = [
     { name = "Alasdair Warwick", email = "alasdair.warwick.19@ucl.ac.uk" },
