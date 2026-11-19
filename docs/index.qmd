@@ -165,6 +165,25 @@ with with_type("ICD-10"):
 sct_codes = DESCRIPTION("diabetes")
 ```
 
+### Temporary filters with `with_col_filters()`
+
+`with_col_filters()` changes `config.col_filters` for a block, mirroring R's
+`with_col_filters()`. A dict is merged into the current value by table, so
+tables it does not name keep their filters; `None` turns filtering off. The
+previous value is restored afterwards, even on exception:
+
+```python
+from codeminer import HAS_ATTRIBUTES, with_col_filters
+
+# SNOMED CT relationship queries use active relationships by default.
+# Include inactive ones for a prescription list:
+with with_col_filters({"relationship": {"SNOMED CT": None}}):
+    edges = HAS_ATTRIBUTES(
+        "372756006", type="SNOMED CT",
+        relationship_types=["127489000", "762949000", "10362801000001104"],
+    )
+```
+
 ### Passing previous results
 
 Functions accept DataFrames from previous queries. The code type is

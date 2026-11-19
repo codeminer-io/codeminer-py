@@ -1,7 +1,8 @@
 """Global configuration and context managers for the codeminer client.
 
 Mirrors R's ``options()`` system. Set persistent defaults on the ``config``
-singleton, or use ``with_type()`` for temporary overrides::
+singleton, or use ``with_type()`` and ``with_col_filters()`` for temporary
+overrides::
 
     import codeminer
 
@@ -13,6 +14,9 @@ singleton, or use ``with_type()`` for temporary overrides::
         bnf_codes = CODES("0204")  # uses BNF
 
     MAP(bnf_codes)  # from_type inferred from DataFrame, to_type from config (SNOMED CT)
+
+    with codeminer.with_col_filters({"relationship": {"SNOMED CT": None}}):
+        CHILDREN("372756006")  # inactive relationships included
 """
 
 from __future__ import annotations
@@ -171,3 +175,47 @@ def with_type(type: str):
     finally:
         config.type = old_type
         config.map_to = old_map_to
+
+
+@contextmanager
+def with_col_filters(col_filters: dict | None):
+    """Temporarily set the column filters sent when a call passes none.
+
+    Mirrors R's ``with_col_filters()``. A dict is merged into
+    ``config.col_filters`` by table key: each ``lookup`` / ``relationship`` /
+    ``mapping`` entry it names replaces that table's current entry, and tables
+    it does not name keep theirs. ``None`` turns filtering off for the block.
+    The previous value is restored when the block exits, even on exception.
+
+    Parameters
+    ----------
+    col_filters : dict | None
+        Table-keyed filters, e.g. ``{"relationship": {"SNOMED CT": None}}``,
+        or ``None`` for no filtering.
+
+    Examples
+    --------
+    >>> with with_col_filters({"relationship": {"SNOMED CT": None}}):
+    ...     edges = HAS_ATTRIBUTES("372756006", type="SNOMED CT")
+    """
+    old = config.col_filters
+    if col_filters is None:
+        new = None
+    else:
+        if not isinstance(col_filters, dict):
+            raise TypeError(
+                "col_filters must be a dict keyed by lookup / relationship / "
+                f"mapping, or None; got {type(col_filters).__name__}"
+            )
+        new = {k: dict(v) for k, v in old.items()} if isinstance(old, dict) else {}
+        for table_type, entries in col_filters.items():
+            merged = new.setdefault(table_type, {})
+            if isinstance(entries, dict) and isinstance(merged, dict):
+                merged.update(entries)
+            else:
+                new[table_type] = entries
+    config.col_filters = new
+    try:
+        yield
+    finally:
+        config.col_filters = old

@@ -41,7 +41,7 @@ from ._client import (
 )
 from ._codelist import CodeList
 from ._combinators import AND, NOT, OR
-from ._config import config, with_type
+from ._config import config, with_col_filters, with_type
 from .exceptions import CodeMinerError
 
 __all__ = [
@@ -67,6 +67,7 @@ __all__ = [
     "CodeList",
     "config",
     "with_type",
+    "with_col_filters",
     "CodeMinerError",
     "AuthStrategy",
     "auth_none",

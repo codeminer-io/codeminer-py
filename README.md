@@ -165,7 +165,7 @@ take priority.
 
 ```python
 import codeminer
-from codeminer import CODES, DESCRIPTION, MAP, with_type
+from codeminer import CHILDREN, CODES, DESCRIPTION, MAP, with_col_filters, with_type
 
 codeminer.config.type = "ICD-10"
 DESCRIPTION("asthma")
@@ -178,6 +178,11 @@ MAP("4939")
 # Switch code type for a block. This also sets the `MAP()` target.
 with with_type("ICD-9"):
     CODES("4939")
+
+# Change column filters for a block, e.g. include inactive SNOMED CT
+# relationships. Merged into `config.col_filters` by table, then restored.
+with with_col_filters({"relationship": {"SNOMED CT": None}}):
+    CHILDREN("372756006", type="SNOMED CT")
 
 codeminer.config.reset()
 ```

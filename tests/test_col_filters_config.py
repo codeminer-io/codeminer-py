@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import codeminer
-from codeminer import config, with_type
+from codeminer import config, with_col_filters, with_type
 
 # One minimal call per endpoint function that takes ``col_filters``. All use
 # ``return_raw=True`` so the mocked response needs no particular shape.
@@ -236,3 +236,73 @@ def test_with_type_leaves_col_filters_alone():
 def test_misspelt_attribute_is_an_error():
     with pytest.raises(AttributeError, match="colfilters"):
         config.colfilters = ALL_EDGES
+
+
+# with_col_filters -----------------------------------------------------------
+
+
+class TestWithColFilters:
+    def test_applies_for_the_block_and_restores(self):
+        assert _sent_body("CODES")["col_filters"] == "default"
+        with with_col_filters(ALL_EDGES):
+            assert _sent_body("CODES")["col_filters"] == ALL_EDGES
+        assert _sent_body("CODES")["col_filters"] == "default"
+        assert config.col_filters == "default"
+
+    def test_none_turns_filtering_off(self):
+        with with_col_filters(None):
+            assert _sent_body("CODES")["col_filters"] is None
+        assert config.col_filters == "default"
+
+    def test_merges_by_table_key_over_config(self):
+        config.col_filters = {"lookup": {"SNOMED CT": {"active_description": ["1"]}}}
+        with with_col_filters(ALL_EDGES):
+            assert config.col_filters == {
+                "lookup": {"SNOMED CT": {"active_description": ["1"]}},
+                "relationship": {"SNOMED CT": None},
+            }
+        assert config.col_filters == {
+            "lookup": {"SNOMED CT": {"active_description": ["1"]}}
+        }
+
+    def test_inner_entry_replaces_the_table_not_the_type(self):
+        config.col_filters = {"lookup": {"ICD-10": {"a": ["1"]}}}
+        with with_col_filters({"lookup": {"SNOMED CT": None}}):
+            assert config.col_filters == {
+                "lookup": {"ICD-10": {"a": ["1"]}, "SNOMED CT": None}
+            }
+
+    def test_nested_blocks_stack(self):
+        with with_col_filters(ALL_EDGES):
+            with with_col_filters({"lookup": {"SNOMED CT": None}}):
+                assert config.col_filters == {
+                    "relationship": {"SNOMED CT": None},
+                    "lookup": {"SNOMED CT": None},
+                }
+            assert config.col_filters == ALL_EDGES
+
+    def test_block_inside_none_config_starts_from_nothing(self):
+        config.col_filters = None
+        with with_col_filters(ALL_EDGES):
+            assert config.col_filters == ALL_EDGES
+        assert config.col_filters is None
+
+    def test_restores_on_exception(self):
+        with pytest.raises(RuntimeError):
+            with with_col_filters(ALL_EDGES):
+                raise RuntimeError("boom")
+        assert config.col_filters == "default"
+
+    def test_does_not_mutate_the_caller_or_the_old_value(self):
+        old = {"lookup": {"SNOMED CT": {"a": ["1"]}}}
+        config.col_filters = old
+        given = {"lookup": {"ICD-10": None}}
+        with with_col_filters(given):
+            pass
+        assert old == {"lookup": {"SNOMED CT": {"a": ["1"]}}}
+        assert given == {"lookup": {"ICD-10": None}}
+
+    def test_rejects_non_dict(self):
+        with pytest.raises(TypeError, match="col_filters must be a dict"):
+            with with_col_filters("default"):
+                pass
